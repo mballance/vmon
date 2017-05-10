@@ -56,12 +56,13 @@ All target harness to SoC messages are acknowledged.
 
   Fixed-length messages can be 2, 4, 8, or 16 bytes in length.
   (2-byte overhead)
-  Message: 0xA5
-  [7:3] EP ID
-  [2:1] length (0=2, 1=4, 2=8, 3=16)
-  [0]   header parity
-  Response: 0xE0 (OK)
-            0xE1 (Error)
+  - Message: 0xA5
+  - [7:3] EP ID
+  - [2:1] length (0=2, 1=4, 2=8, 3=16)
+  - [0]   header parity
+  - Response: 
+  -- 0xE0 (OK)
+  -- 0xE1 (Error)
             
 - Variable-length messages
   (5-byte overhead)
