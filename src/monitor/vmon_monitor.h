@@ -9,14 +9,41 @@
 extern "C" {
 #endif
 
+typedef int32_t (*vmon_data_f)(void *, uint8_t *, uint32_t);
+
+typedef struct vmon_closure_s {
+	vmon_data_f			f;
+	void				*ud;
+} vmon_closure_t;
+
+typedef struct vmon_monitor_s {
+	uint8_t				h2m_id;
+	uint8_t				h2m_idx;
+	uint8_t				m2h_id;
+	uint8_t				m2h_idx;
+	vmon_closure_t		h2m[4];
+	vmon_closure_t		m2h[4];
+	uint8_t				buf[16];
+} vmon_monitor_t;
+
+void vmon_monitor_init(vmon_monitor_t *mon);
+
+void vmon_monitor_add_h2m_path(
+		vmon_monitor_t		*mon,
+		vmon_data_f			f,
+		void				*ud);
+
+void vmon_monitor_add_m2h_path(
+		vmon_monitor_t		*mon,
+		vmon_data_f			f,
+		void				*ud);
+
 /**
  * vmon_monitor_run()
  *
  * Runs the main loop of the vmon_monitor
  */
-void vmon_monitor_run(
-		uint8_t		n_h2m_paths,
-		uint8_t		n_m2h_paths);
+void vmon_monitor_run(vmon_monitor_t *mon);
 
 
 #ifdef __cplusplus
