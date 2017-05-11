@@ -5,7 +5,7 @@ ifneq (1,$(RULES))
 
 VMON_MONITOR_SRC := $(notdir $(wildcard $(VMON_MONITOR_DIR)/*.c))
 
-SRC_DIRS += $(VMON_MONITOR_DIR)
+SRC_DIRS += $(VMON_MONITOR_DIR) $(VMON_MONITOR_DIR)/../common
 
 else
 

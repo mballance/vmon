@@ -23,6 +23,10 @@ public:
 
 	bool exec(uint64_t addr);
 
+	bool set_m2h_path(uint8_t p);
+
+	bool set_h2m_path(uint8_t p);
+
 private:
 
 	enum len_t {

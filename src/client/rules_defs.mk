@@ -5,7 +5,7 @@ ifneq (1,$(RULES))
 
 VMON_CLIENT_SRC := $(notdir $(wildcard $(VMON_CLIENT_DIR)/*.cpp))
 
-SRC_DIRS += $(VMON_CLIENT_DIR)
+SRC_DIRS += $(VMON_CLIENT_DIR) $(VMON_CLIENT_DIR)/../common
 
 else
 
