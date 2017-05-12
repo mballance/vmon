@@ -38,8 +38,7 @@ typedef enum {
 	 * Variable-length message
 	 * [0]      - command
 	 * [1..8]   - address
-	 * [9..10]  - bytes
-	 * [11..N]  - data
+	 * [9..N]  - data
 	 */
 	VMON_EP0_WRITE,
 
@@ -47,7 +46,7 @@ typedef enum {
 	 * 16-byte message
 	 * [0]      - command
 	 * [1..8]   - address
-	 * [9..10]  - bytes
+	 * [9..10]  - n_bytes
 	 *
 	 * Response: variable-length message
 	 * [0]      - OK

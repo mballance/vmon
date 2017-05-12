@@ -55,7 +55,7 @@ void vmon_monitor_add_m2h_path(
 }
 
 /**
- * All EP0 commands are formatted as:
+ * All fixed-length EP0 commands are formatted as:
  * [0] Command
  *
  */
@@ -101,6 +101,89 @@ int vmon_monitor_handle_ep0_fixed(
 			outb(mon, VMON_MSG_RSP_ERR);
 		}
 	} break;
+
+	case VMON_EP0_READ: {
+		uint64_t addr = 0;
+		uint16_t len = 0;
+		uint8_t cs=0, tmp;
+		int i;
+
+		for (i=7; i>=0; i--) {
+			addr <<= 8;
+			addr |= buf[i+1];
+		}
+
+		for (i=1; i>=0; i--) {
+			len <<= 8;
+			len |= buf[i+9];
+		}
+
+		outb(mon, VMON_MSG_RSP_OK);
+		outb(mon, VMON_MSG_VARLEN_REQ);
+		outb(mon, 0); // EP
+		outb(mon, (len & 0xFF));
+		outb(mon, ((len >> 8) & 0xFF));
+
+		for (i=0; i<len; i++) {
+			tmp = vmon_monitor_read8(addr);
+			outb(mon, tmp);
+			cs += tmp;
+			addr++;
+		}
+
+		outb(mon, cs);
+
+	} break;
+
+	default:
+		outb(mon, VMON_MSG_RSP_ERR);
+		break;
+
+	}
+}
+
+void vmon_monitor_handle_ep0_var(
+		vmon_monitor_t 	*mon,
+		uint32_t		len) {
+	uint8_t c = getb(mon);
+
+	fprintf(stdout, "VAR: len=%d, c=0x%02x\n", len, c);
+
+	switch (c) {
+	case VMON_EP0_WRITE: {
+		uint32_t i;
+		uint64_t addr = 0, tmp;
+		uint8_t t, cs=c, cs_t;
+
+		for (i=0; i<8; i++) {
+			t = getb(mon);
+			cs += t;
+			tmp = t;
+			tmp <<= 8*i;
+			addr |= tmp;
+		}
+
+		for (i=0; i<(len-8-1); i++) {
+			t=getb(mon);
+			cs += t;
+			vmon_monitor_write8(addr, t);
+			addr++;
+		}
+
+		// Finally, get the checksum
+		cs_t = getb(mon);
+
+		if (cs == cs_t) {
+			outb(mon, VMON_MSG_RSP_OK);
+		} else {
+			fprintf(stdout, "Bad CS: expect 0x%02x ; 0x%02x\n", cs, cs_t);
+			outb(mon, VMON_MSG_RSP_ERR);
+		}
+	} break;
+
+	default:
+		outb(mon, VMON_MSG_RSP_ERR);
+		break;
 	}
 }
 
@@ -131,22 +214,44 @@ void vmon_monitor_run(vmon_monitor_t *mon) {
 				ep = (b >> 3); // 7:3
 				// 2, 4, 8, 16
 				len = 2 << ((b >> 1) & 0x3);
-				fprintf(stdout, "len=%d\n", len);
 				for (i=0; i<len; i++) {
 					mon->buf[i] = getb(mon);
 				}
 
-				fprintf(stdout, "ep=%d\n", ep);
-				fprintf(stdout, "data[0]=%d data[1]=%d\n", mon->buf[0], mon->buf[1]);
-
-				vmon_monitor_handle_ep0_fixed(mon, len, mon->buf);
-
+				if (ep == 0) {
+					vmon_monitor_handle_ep0_fixed(mon, len, mon->buf);
+				} else {
+					// Only EP0 supported at the moment
+					outb(mon, VMON_MSG_RSP_ERR);
+				}
 			} else {
 				// error
 				outb(mon, VMON_MSG_RSP_ERR);
 			}
 		} else if (b == VMON_MSG_VARLEN_REQ) {
 			// variable-length message
+			b = getb(mon);
+			p = parity((b & 0xFE));
+
+			fprintf(stdout, "b=%d p=%d\n", b, p);
+
+			if (b == (b&1)) {
+				uint8_t ep = (b >> 3); // 7:3
+				uint16_t len = 0;
+
+				for (i=0; i<2; i++) {
+					len |= (getb(mon) << 8*i);
+				}
+
+				if (ep == 0) {
+					vmon_monitor_handle_ep0_var(mon, len);
+				} else {
+					// Only EP0 supported at the moment
+					outb(mon, VMON_MSG_RSP_ERR);
+				}
+			} else {
+				outb(mon, VMON_MSG_RSP_ERR);
+			}
 		} else {
 			// unknown
 		}

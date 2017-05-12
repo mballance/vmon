@@ -53,6 +53,82 @@ bool vmon_client::exec(uint64_t addr) {
 	return send_fixedlen_msg(0, LEN_16, VMON_EP0_EXEC, addr);
 }
 
+bool vmon_client::read(uint64_t addr, uint8_t *data, uint16_t len) {
+	uint8_t cs_t, cs;
+	if (!send_fixedlen_msg(0, LEN_16,
+			((addr << 8) | VMON_EP0_READ), ((addr >> 56) | (len << 8)))) {
+		fprintf(stdout, "Error: bad response\n");
+		return false;
+	}
+
+	// Now, expect to receive a variable-length response
+	uint8_t c;
+
+	if ((c=getb()) != VMON_MSG_VARLEN_REQ) {
+		fprintf(stdout, "Error: expect varlen, receive 0x%02x\n", c);
+		return false;
+	}
+	if ((c=getb()) != 0) {
+		fprintf(stdout, "Error: expect 0, receive 0x%02x\n", c);
+		return false;
+	}
+
+	uint16_t len_r = getb();
+	len_r |= (getb() << 8);
+
+	if (len_r != len) {
+		return false;
+	}
+
+	// Finally, receive bytes
+	cs_t = 0;
+	for (uint32_t i=0; i<len_r; i++) {
+		data[i] = getb();
+		cs_t += data[i];
+	}
+
+	cs = getb();
+
+	if (cs != cs_t) {
+		return false;
+	}
+
+	return true;
+}
+
+bool vmon_client::write(uint64_t addr, uint8_t *data, uint16_t len) {
+	uint8_t cs=VMON_EP0_WRITE;
+	uint16_t len_t = len + 1 + 8;
+
+	// First, output VARLEN
+	outb(VMON_MSG_VARLEN_REQ);
+
+	// Output EP(0)
+	outb(0);
+	outb(len_t);
+	outb(len_t >> 8);
+
+	outb(VMON_EP0_WRITE); // Command
+
+	// Address next
+	for (uint32_t i=0; i<8; i++) {
+		cs += (addr & 0xFF);
+		outb(addr);
+		addr >>= 8;
+	}
+
+	// Finally, data
+	for (uint32_t i=0; i<len; i++) {
+		outb(data[i]);
+		cs += data[i];
+	}
+
+	// Finally, emit checksum
+	outb(cs);
+
+	return (wait_resp() == VMON_MSG_RSP_OK);
+}
+
 bool vmon_client::set_m2h_path(uint8_t p) {
 	bool ret = send_fixedlen_msg(0, LEN_2,
 			(VMON_EP0_SET_M2H_EP | (p << 8)), 0);
