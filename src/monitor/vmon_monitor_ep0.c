@@ -1,10 +1,14 @@
 
 #include "vmon_monitor_services.h"
+#include <stdint.h>
+#include <stdio.h>
 
-void vmon_monitor_exec(uint64_t addr) {
-	((void (*)(void))addr)();
+int32_t vmon_monitor_exec(uint64_t addr) {
+	fprintf(stdout, "vmon_monitor_exec: 0x%08llx\n", addr);
+	fflush(stdout);
+	return ((int32_t (*)(void))addr)();
 }
-void __attribute__((weak)) vmon_monitor_exec(uint64_t addr);
+int32_t __attribute__((weak)) vmon_monitor_exec(uint64_t addr);
 
 /**
  *

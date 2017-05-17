@@ -54,6 +54,14 @@ typedef enum {
 	 */
 	VMON_EP0_READ,
 
+	/**
+	 * 8-byte message
+	 * [0]     - command
+	 * [4..7]  - status
+	 */
+	VMON_EP0_ENDTEST,
+
+
 } vmon_ep0_msgs_e;
 
 #endif /* INCLUDED_VMON_EP0_MSGS */

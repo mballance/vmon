@@ -33,8 +33,6 @@ vmon_socket_path::vmon_socket_path(bool h2m) : m_h2m(h2m) {
 
 	socklen_t clilen = sizeof(cli_addr);
 	m_monitor_fd = accept(srv_sock, (struct sockaddr *)&cli_addr, &clilen);
-
-	fprintf(stdout, "m_monitor_fd=%d\n", m_monitor_fd);
 }
 
 int32_t vmon_socket_path::recv(void *data, uint32_t sz, int32_t timeout) {
@@ -44,7 +42,6 @@ int32_t vmon_socket_path::recv(void *data, uint32_t sz, int32_t timeout) {
 		int ret;
 		do {
 			ret = ::recv(m_harness_fd, data, sz, 0);
-			fprintf(stdout, "client::recv ret=%d errno=%d\n", ret, errno);
 		} while (ret < 0);
 		return ret;
 	} else {
@@ -55,12 +52,8 @@ int32_t vmon_socket_path::recv(void *data, uint32_t sz, int32_t timeout) {
 int32_t vmon_socket_path::send(void *data, uint32_t sz) {
 	// Called by the harness size of m2h
 	if (m_h2m) {
-		fprintf(stdout, "harness::send\n");
-		fflush(stdout);
 		return ::send(m_monitor_fd, data, sz, 0);
 	} else {
-		fprintf(stdout, "skip send\n");
-		fflush(stdout);
 		return -1;
 	}
 }
@@ -69,13 +62,9 @@ int32_t vmon_socket_path::data(void *ud, uint8_t *data, uint32_t sz) {
 	vmon_socket_path *p = static_cast<vmon_socket_path *>(ud);
 	if (p->m_h2m) {
 		// data(), on the harness-to-monitor path is used to receive data
-		fprintf(stdout, "monitor::recv\n");
-		fflush(stdout);
 		return ::recv(p->m_harness_fd, data, sz, 0);
 	} else {
 		// data(), on the monitor-to-harness path is used to send data
-		fprintf(stdout, "monitor::send %02x\n", data[0]);
-		fflush(stdout);
 		return ::send(p->m_monitor_fd, data, sz, 0);
 	}
 }

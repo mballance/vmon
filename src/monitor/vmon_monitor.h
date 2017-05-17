@@ -38,6 +38,14 @@ void vmon_monitor_add_m2h_path(
 		vmon_data_f			f,
 		void				*ud);
 
+void vmon_monitor_msg(
+		vmon_monitor_t		*mon,
+		const char			*msg);
+
+void vmon_monitor_endtest(
+		vmon_monitor_t		*mon,
+		int32_t				status);
+
 /**
  * vmon_monitor_run()
  *

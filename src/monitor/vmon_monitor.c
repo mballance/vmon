@@ -54,6 +54,50 @@ void vmon_monitor_add_m2h_path(
 	mon->m2h_idx++;
 }
 
+void vmon_monitor_msg(
+		vmon_monitor_t		*mon,
+		const char			*msg) {
+	uint8_t cs;
+	uint32_t len = strlen(msg), i;
+	// strlen+cmd+null
+	uint32_t len_t = len + 1 + 1;
+
+	// Send an EP0 MSG message
+	outb(mon, VMON_MSG_VARLEN_REQ);
+	outb(mon, 0); // EP0
+	// Total length
+	outb(mon, len_t);
+	outb(mon, len_t>>8);
+
+	cs = VMON_EP0_MSG;
+	outb(mon, VMON_EP0_MSG);
+
+	for (i=0; i<=len; i++) {
+		outb(mon, msg[i]);
+		cs += msg[i];
+	}
+	outb(mon, cs);
+}
+
+void vmon_monitor_endtest(
+		vmon_monitor_t			*mon,
+		int32_t					status) {
+	int i;
+	uint8_t cmd_ep = (2 << 1); // EP=0, len=8
+	uint32_t stat_u = (uint32_t)status;
+	cmd_ep |= (parity(cmd_ep) & 1);
+
+	outb(mon, VMON_MSG_FIXLEN_REQ);
+	outb(mon, cmd_ep);
+	outb(mon, VMON_EP0_ENDTEST);
+	for (i=0; i<3; i++) { // pad
+		outb(mon, 0);
+	}
+	for (i=0; i<4; i++) {
+		outb(mon, (stat_u >> (8*i)));
+	}
+}
+
 /**
  * All fixed-length EP0 commands are formatted as:
  * [0] Command
@@ -68,7 +112,7 @@ int vmon_monitor_handle_ep0_fixed(
 		uint64_t addr = 0;
 		int i;
 
-		for (i=0; i<8; i++) {
+		for (i=7; i>=0; i--) {
 			addr <<= 8;
 			addr |= buf[8+i];
 		}
@@ -195,8 +239,6 @@ void vmon_monitor_run(vmon_monitor_t *mon) {
 
 		// Wait for a header byte
 		b = getb(mon);
-
-		fprintf(stdout, "monitor: b=0x%02x\n", b);
 
 		if (b == VMON_MSG_PING_REQ) {
 			// PING response

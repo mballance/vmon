@@ -2,11 +2,21 @@
 #include "vmon_client.h"
 #include "vmon_msgs.h"
 #include "vmon_ep0_msgs.h"
+#include <stdio.h>
 
 vmon_client::vmon_client() {
 	m_m2h_if_id = 0;
 	m_h2m_if_id = 0;
 	m_connected = false;
+
+	m_varlenmax = 0;
+	m_varlen = 0;
+
+	add_ep0_listener(this);
+}
+
+vmon_client::~vmon_client() {
+
 }
 
 void vmon_client::add_m2h_if(vmon_m2h_if *i) {
@@ -49,7 +59,16 @@ bool vmon_client::ping() {
 	return (data == VMON_MSG_PING_ACK);
 }
 
+void vmon_client::add_ep0_listener(vmon_client_ep0_if *ep0_if) {
+	m_ep0_listeners.push_back(ep0_if);
+}
+
+uint64_t vmon_client::load(const std::string &path) {
+
+}
+
 bool vmon_client::exec(uint64_t addr) {
+	m_endtest = false;
 	return send_fixedlen_msg(0, LEN_16, VMON_EP0_EXEC, addr);
 }
 
@@ -129,6 +148,25 @@ bool vmon_client::write(uint64_t addr, uint8_t *data, uint16_t len) {
 	return (wait_resp() == VMON_MSG_RSP_OK);
 }
 
+bool vmon_client::wait_endtest(int32_t *status) {
+	uint8_t cmd;
+
+	// Process messages
+	while (!m_endtest) {
+
+		cmd = getb();
+
+		if (cmd == VMON_MSG_FIXLEN_REQ || cmd == VMON_MSG_VARLEN_REQ) {
+			process_async_msg(cmd);
+		} else {
+			break;
+		}
+	}
+	*status = m_teststatus;
+
+	return m_endtest;
+}
+
 bool vmon_client::set_m2h_path(uint8_t p) {
 	bool ret = send_fixedlen_msg(0, LEN_2,
 			(VMON_EP0_SET_M2H_EP | (p << 8)), 0);
@@ -149,6 +187,15 @@ bool vmon_client::set_h2m_path(uint8_t p) {
 	}
 
 	return ret;
+}
+
+void vmon_client::msg(const char *msg) {
+
+}
+
+void vmon_client::endtest(int32_t status) {
+	m_endtest = true;
+	m_teststatus = status;
 }
 
 uint8_t vmon_client::parity(uint8_t b) {
@@ -183,15 +230,9 @@ bool vmon_client::send_fixedlen_msg(
 		msg[2+i] = (data2 >> 8*(i-8));
 	}
 
-	for (uint32_t i=0; i<byte_len; i++) {
-		fprintf(stdout, "msg[%d]=%02x\n", i, msg[2+i]);
-	}
-
 	m_h2m_if.at(m_h2m_if_id)->send(msg, 2+byte_len);
 
 	uint8_t resp = wait_resp();
-
-	fprintf(stdout, "resp=%02x\n", resp);
 
 	return (resp == VMON_MSG_RSP_OK);
 }
@@ -200,19 +241,7 @@ uint8_t vmon_client::wait_resp() {
 	uint8_t resp;
 
 	while ((resp = getb()) != VMON_MSG_RSP_OK && resp != VMON_MSG_RSP_ERR) {
-		switch (resp) {
-		case VMON_MSG_FIXLEN_REQ: {
-			fprintf(stdout, "TODO: process async message 0x%02x\n", resp);
-		} break;
-
-		case VMON_MSG_VARLEN_REQ: {
-			fprintf(stdout, "TODO: process async message 0x%02x\n", resp);
-		} break;
-
-		default:
-			fprintf(stdout, "Error: Unknown async-message %02x\n", resp);
-			break;
-		}
+		process_async_msg(resp);
 	}
 
 	return resp;
@@ -226,4 +255,132 @@ uint8_t vmon_client::getb(int32_t timeout) {
 
 void vmon_client::outb(uint8_t v) {
 	m_h2m_if.at(m_h2m_if_id)->send(&v, 1);
+}
+
+void vmon_client::read_fixedlen_msg(
+		uint8_t		*ep,
+		uint8_t 	*len,
+		uint8_t 	*buf) {
+	uint8_t b = getb();
+	uint8_t p = parity((b & 0xFE));
+
+	if (p == (b & 1)) {
+		*ep = (b >> 3); // 7:3
+		*len = 2 << ((b >> 1) & 0x3);
+
+		for (int i=0; i<*len; i++) {
+			buf[i] = getb();
+		}
+	} else {
+		// Error
+		fprintf(stdout, "fixed-len parity error\n");
+	}
+}
+
+uint8_t *vmon_client::read_varlen_msg(
+		uint8_t		*ep,
+		uint16_t	*len) {
+	uint8_t h = getb();
+	*ep = (h >> 3);
+
+	*len = 0;
+	for (int i=0; i<2; i++) {
+		*len |= (getb() << 8*i);
+	}
+
+	if (m_varlenmax < *len) {
+		uint8_t *tmp = m_varlen;
+		m_varlen = new uint8_t[*len];
+		if (tmp) {
+			delete [] tmp;
+		}
+	}
+
+	for (int i=0; i<*len; i++) {
+		m_varlen[i] = getb();
+	}
+
+	// Read checksum
+	// TODO: check
+	getb();
+
+	return m_varlen;
+}
+
+void vmon_client::process_async_msg(uint8_t cmd) {
+	switch (cmd) {
+	case VMON_MSG_FIXLEN_REQ: {
+		uint8_t ep;
+		uint8_t len;
+		uint8_t buf[16];
+
+		read_fixedlen_msg(&ep, &len, buf);
+
+		if (ep == 0) {
+			process_async_ep0_fixedlen(len, buf);
+		} else {
+			fprintf(stdout, "TODO: process async message 0x%02x on ep %d\n", cmd, ep);
+		}
+	} break;
+
+	case VMON_MSG_VARLEN_REQ: {
+		uint8_t ep;
+		uint16_t len;
+		uint8_t *data = read_varlen_msg(&ep, &len);
+
+		if (ep == 0) {
+			process_async_ep0_varlen(len, data);
+		} else {
+			fprintf(stdout, "TODO: process async variable-length message 0x%02x\n", cmd);
+		}
+	} break;
+
+	case VMON_MSG_PING_ACK: {
+		// Ignore
+	} break;
+
+	default:
+		fprintf(stdout, "Error: Unknown async-message %02x\n", cmd);
+		break;
+	}
+
+}
+
+void vmon_client::process_async_ep0_fixedlen(
+		uint32_t			len,
+		uint8_t				*buf) {
+	switch (buf[0]) {
+	case VMON_EP0_ENDTEST: {
+		for (std::vector<vmon_client_ep0_if *>::iterator it=m_ep0_listeners.begin();
+				it != m_ep0_listeners.end(); it++) {
+			uint32_t stat_u = 0;
+			for (int i=0; i<4; i++) {
+				stat_u |= (buf[4+i] << 8*i);
+			}
+
+			// TODO: read status
+			(*it)->endtest((int32_t)stat_u);
+		}
+	} break;
+
+	default: {
+		fprintf(stdout, "Error: unknown async ep0 message %d\n", buf[0]);
+	} break;
+	}
+}
+
+void vmon_client::process_async_ep0_varlen(uint32_t len, uint8_t *buf) {
+	switch (buf[0]) {
+	case VMON_EP0_MSG: {
+		fprintf(stdout, "MSG: %s\n", (const char *)&buf[1]);
+		for (std::vector<vmon_client_ep0_if *>::iterator it=m_ep0_listeners.begin();
+				it != m_ep0_listeners.end(); it++) {
+			(*it)->msg((const char *)&buf[1]);
+		}
+	} break;
+
+	default: {
+		fprintf(stdout, "Error: Unknown EP0 variable-length message %d\n", buf[0]);
+	} break;
+	}
 }
