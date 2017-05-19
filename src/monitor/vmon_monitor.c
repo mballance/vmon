@@ -6,7 +6,6 @@
 #include "vmon_msgs.h"
 #include "vmon_ep0_msgs.h"
 #include <string.h>
-#include <stdio.h>
 
 static uint8_t getb(vmon_monitor_t *mon) {
 	uint8_t d;
@@ -138,7 +137,6 @@ int vmon_monitor_handle_ep0_fixed(
 		uint8_t id = buf[1];
 
 		if (id < mon->h2m_idx) {
-			fprintf(stdout, "OK: h2m now %d\n", id);
 			outb(mon, VMON_MSG_RSP_OK);
 			mon->h2m_id = id;
 		} else {
@@ -191,8 +189,6 @@ void vmon_monitor_handle_ep0_var(
 		uint32_t		len) {
 	uint8_t c = getb(mon);
 
-	fprintf(stdout, "VAR: len=%d, c=0x%02x\n", len, c);
-
 	switch (c) {
 	case VMON_EP0_WRITE: {
 		uint32_t i;
@@ -220,7 +216,7 @@ void vmon_monitor_handle_ep0_var(
 		if (cs == cs_t) {
 			outb(mon, VMON_MSG_RSP_OK);
 		} else {
-			fprintf(stdout, "Bad CS: expect 0x%02x ; 0x%02x\n", cs, cs_t);
+//			fprintf(stdout, "Bad CS: expect 0x%02x ; 0x%02x\n", cs, cs_t);
 			outb(mon, VMON_MSG_RSP_ERR);
 		}
 	} break;
@@ -274,8 +270,6 @@ void vmon_monitor_run(vmon_monitor_t *mon) {
 			// variable-length message
 			b = getb(mon);
 			p = parity((b & 0xFE));
-
-			fprintf(stdout, "b=%d p=%d\n", b, p);
 
 			if (b == (b&1)) {
 				uint8_t ep = (b >> 3); // 7:3

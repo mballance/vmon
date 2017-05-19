@@ -87,6 +87,7 @@ bool vmon_client::read(uint64_t addr, uint8_t *data, uint16_t len) {
 		fprintf(stdout, "Error: expect varlen, receive 0x%02x\n", c);
 		return false;
 	}
+
 	if ((c=getb()) != 0) {
 		fprintf(stdout, "Error: expect 0, receive 0x%02x\n", c);
 		return false;
@@ -102,8 +103,9 @@ bool vmon_client::read(uint64_t addr, uint8_t *data, uint16_t len) {
 	// Finally, receive bytes
 	cs_t = 0;
 	for (uint32_t i=0; i<len_r; i++) {
-		data[i] = getb();
-		cs_t += data[i];
+		uint8_t tmp = getb();
+		data[i] = tmp;
+		cs_t += tmp;
 	}
 
 	cs = getb();
@@ -210,6 +212,20 @@ uint8_t vmon_client::parity(uint8_t b) {
 	return !(ret&1);
 }
 
+void vmon_client::send(uint8_t *msg, uint32_t len) {
+	uint32_t idx=0;
+
+	while (len > 0) {
+		int32_t ret = m_h2m_if.at(m_h2m_if_id)->send(
+				&msg[idx], len);
+
+		if (ret > 0) {
+			len -= ret;
+			idx += ret;
+		}
+	}
+}
+
 bool vmon_client::send_fixedlen_msg(
 		uint8_t			ep,
 		len_t			len,
@@ -230,7 +246,7 @@ bool vmon_client::send_fixedlen_msg(
 		msg[2+i] = (data2 >> 8*(i-8));
 	}
 
-	m_h2m_if.at(m_h2m_if_id)->send(msg, 2+byte_len);
+	send(msg, 2+byte_len);
 
 	uint8_t resp = wait_resp();
 

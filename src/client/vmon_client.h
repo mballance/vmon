@@ -58,6 +58,8 @@ private:
 
 	static uint8_t parity(uint8_t v);
 
+	void send(uint8_t *msg, uint32_t len);
+
 	bool send_fixedlen_msg(
 			uint8_t		ep,
 			len_t		len,
