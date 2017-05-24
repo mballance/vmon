@@ -3,6 +3,8 @@
 #include "vmon_msgs.h"
 #include "vmon_ep0_msgs.h"
 #include <stdio.h>
+#include <elf.h>
+#include <arpa/inet.h>
 
 vmon_client::vmon_client() {
 	m_m2h_if_id = 0;
@@ -65,6 +67,32 @@ void vmon_client::add_ep0_listener(vmon_client_ep0_if *ep0_if) {
 
 uint64_t vmon_client::load(const std::string &path) {
 
+}
+
+uint64_t vmon_client::get_entry_addr(const std::string &path) {
+	FILE *fp = fopen(path.c_str(), "rb");
+	bool big_endian;
+
+	if (!fp) {
+		return ~0;
+	}
+
+	Elf32_Ehdr hdr32;
+	fread(&hdr32, sizeof(Elf32_Ehdr), 1, fp);
+
+//	for (int i=0; i<16; i++) {
+//		fprintf(stdout, "  e_ident[%d]=%02x\n", i, (int)hdr32.e_ident[i]);
+//	}
+
+	big_endian = (hdr32.e_ident[EI_DATA] == ELFDATA2MSB);
+
+	if (big_endian) {
+		hdr32.e_entry = ntohl(hdr32.e_entry);
+	}
+
+	fclose(fp);
+
+	return hdr32.e_entry;
 }
 
 bool vmon_client::exec(uint64_t addr) {

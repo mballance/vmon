@@ -7,6 +7,9 @@
 #include "vmon_ep0_msgs.h"
 #include <string.h>
 
+
+vmon_monitor_t *glbl_mon;
+
 static uint8_t getb(vmon_monitor_t *mon) {
 	uint8_t d;
 
@@ -119,6 +122,7 @@ int vmon_monitor_handle_ep0_fixed(
 		outb(mon, VMON_MSG_RSP_OK);
 
 		// Do the exec
+		glbl_mon = mon;
 		vmon_monitor_exec(addr);
 	} break;
 

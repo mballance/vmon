@@ -28,6 +28,13 @@ void *_vmon_client_add_h2m_if(void *);
 int _vmon_client_connect(void *, int *);
 
 int _vmon_client_read(void *, uint64_t, uint8_t *, uint32_t);
+
+uint64_t _vmon_client_get_entry_addr(void *, const char *path);
+
+int _vmon_client_exec(void *client_p, uint64_t addr);
+
+int _vmon_client_wait_endtest(void *client_p, int *status);
+
 }
 
 class vmon_client_dpi_m2h : public virtual vmon_m2h_if {
@@ -91,6 +98,28 @@ void *_vmon_client_add_h2m_if(void *client_p) {
 int _vmon_client_connect(void *client_p, int *ok) {
 	try {
 		*ok = static_cast<vmon_client *>(client_p)->connect();
+	} catch (std::runtime_error) {
+		return 1;
+	}
+	return 0;
+}
+
+uint64_t _vmon_client_get_entry_addr(void *client_p, const char *path) {
+	return static_cast<vmon_client *>(client_p)->get_entry_addr(path);
+}
+
+int _vmon_client_exec(void *client_p, uint64_t addr) {
+	try {
+		static_cast<vmon_client *>(client_p)->exec(addr);
+	} catch (std::runtime_error) {
+		return 1;
+	}
+	return 0;
+}
+
+int _vmon_client_wait_endtest(void *client_p, int *status) {
+	try {
+		static_cast<vmon_client *>(client_p)->wait_endtest(status);
 	} catch (std::runtime_error) {
 		return 1;
 	}

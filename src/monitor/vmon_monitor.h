@@ -26,6 +26,8 @@ typedef struct vmon_monitor_s {
 	uint8_t				buf[16];
 } vmon_monitor_t;
 
+extern vmon_monitor_t *glbl_mon;
+
 void vmon_monitor_init(vmon_monitor_t *mon);
 
 void vmon_monitor_add_h2m_path(

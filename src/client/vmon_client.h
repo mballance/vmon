@@ -29,6 +29,11 @@ public:
 	 */
 	uint64_t load(const std::string &path);
 
+	/**
+	 * Obtains the entry-point address from an ELF file
+	 */
+	uint64_t get_entry_addr(const std::string &path);
+
 	bool exec(uint64_t addr);
 
 	bool read(uint64_t addr, uint8_t *data, uint16_t len);

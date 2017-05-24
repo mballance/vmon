@@ -55,6 +55,18 @@ package vmon_client_pkg;
 			_vmon_client_connect(m_client, ok);
 		endtask
 		
+		function longint unsigned get_entry_addr(string path);
+			return _vmon_client_get_entry_addr(m_client, path);
+		endfunction
+		
+		task exec(longint unsigned addr);
+			_vmon_client_exec(m_client, addr);
+		endtask
+		
+		task wait_endtest(output int status);
+			_vmon_client_wait_endtest(m_client, status);
+		endtask
+		
 		task read(
 			longint unsigned		addr,
 			ref byte unsigned		data[],
@@ -84,6 +96,19 @@ package vmon_client_pkg;
 	import "DPI-C" context task _vmon_client_connect(
 			chandle			client,
 			output int		ok);
+	
+	import "DPI-C" context function longint unsigned _vmon_client_get_entry_addr(
+			chandle			client,
+			string			path);
+	
+	import "DPI-C" context task _vmon_client_exec(
+			chandle				client,
+			longint unsigned	addr);
+	
+	import "DPI-C" context task _vmon_client_wait_endtest(
+			chandle				client,
+			output int			status);
+			
 	
 	import "DPI-C" context task _vmon_client_read(
 			input chandle			client,
