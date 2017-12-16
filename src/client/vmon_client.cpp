@@ -3,8 +3,13 @@
 #include "vmon_msgs.h"
 #include "vmon_ep0_msgs.h"
 #include <stdio.h>
-#include <elf.h>
+#ifndef _WIN32
 #include <arpa/inet.h>
+#include <elf.h>
+#else
+#include <winsock2.h>
+#include "elf/elf.h"
+#endif
 
 vmon_client::vmon_client() {
 	m_m2h_if_id = 0;
