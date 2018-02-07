@@ -55,6 +55,13 @@ typedef enum {
 	VMON_EP0_READ,
 
 	/**
+	 * 0-byte message
+	 *
+	 * Response: OK
+	 */
+	VMON_EP0_EXIT,
+
+	/**
 	 * 8-byte message
 	 * [0]     - command
 	 * [4..7]  - status

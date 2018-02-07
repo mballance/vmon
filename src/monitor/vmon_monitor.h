@@ -23,6 +23,7 @@ typedef struct vmon_monitor_s {
 	uint8_t				m2h_idx;
 	vmon_closure_t		h2m[4];
 	vmon_closure_t		m2h[4];
+	uint8_t				active;
 	uint8_t				buf[16];
 } vmon_monitor_t;
 

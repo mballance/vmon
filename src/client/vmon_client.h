@@ -18,6 +18,9 @@ public:
 
 	void add_h2m_if(vmon_h2m_if *i);
 
+	/**
+	 * Pings the remote device until it responds
+	 */
 	bool connect();
 
 	bool ping();
@@ -36,6 +39,8 @@ public:
 
 	bool exec(uint64_t addr);
 
+	bool exit();
+
 	bool read(uint64_t addr, uint8_t *data, uint16_t len);
 
 	bool write(uint64_t addr, uint8_t *data, uint16_t len);
@@ -45,6 +50,11 @@ public:
 	bool set_m2h_path(uint8_t p);
 
 	bool set_h2m_path(uint8_t p);
+
+	// Read and process one message.
+	bool read_and_process_msg();
+
+	//
 
 protected:
 

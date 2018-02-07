@@ -33,6 +33,8 @@ uint64_t _vmon_client_get_entry_addr(void *, const char *path);
 
 int _vmon_client_exec(void *client_p, uint64_t addr);
 
+int _vmon_client_exit(void *client_p);
+
 int _vmon_client_wait_endtest(void *client_p, int *status);
 
 }
@@ -111,6 +113,15 @@ uint64_t _vmon_client_get_entry_addr(void *client_p, const char *path) {
 int _vmon_client_exec(void *client_p, uint64_t addr) {
 	try {
 		static_cast<vmon_client *>(client_p)->exec(addr);
+	} catch (std::runtime_error) {
+		return 1;
+	}
+	return 0;
+}
+
+int _vmon_client_exit(void *client_p) {
+	try {
+		static_cast<vmon_client *>(client_p)->exit();
 	} catch (std::runtime_error) {
 		return 1;
 	}

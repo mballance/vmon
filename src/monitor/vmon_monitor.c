@@ -181,6 +181,11 @@ int vmon_monitor_handle_ep0_fixed(
 
 	} break;
 
+	case VMON_EP0_EXIT: {
+		outb(mon, VMON_MSG_RSP_OK);
+		mon->active = 0;
+	} break;
+
 	default:
 		outb(mon, VMON_MSG_RSP_ERR);
 		break;
@@ -235,7 +240,9 @@ void vmon_monitor_run(vmon_monitor_t *mon) {
 	uint8_t b, p;
 	uint32_t i;
 
-	while (1) {
+	mon->active = 1;
+
+	while (mon->active) {
 
 		// Wait for a header byte
 		b = getb(mon);

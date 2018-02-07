@@ -9,25 +9,19 @@
  */
 package vmon_client_pkg;
 	
-	class vmon_m2h_if;
-		virtual task recv(
+	interface class vmon_m2h_if;
+		pure virtual task recv(
 			output byte	unsigned	data[64],
 			input int				size,
 			input int				timeout,
 			output int				ret);
-			ret = -1;
-		endtask
-			
 	endclass
 	
-	class vmon_h2m_if;
-		virtual task send(
+	interface class vmon_h2m_if;
+		pure virtual task send(
 			input byte unsigned 	data[64],
 			input int				size,
 			output int				ret);
-			ret = -1;
-		endtask
-			
 	endclass
 
 	// Global maps between native and SV handles
@@ -61,6 +55,10 @@ package vmon_client_pkg;
 		
 		task exec(longint unsigned addr);
 			_vmon_client_exec(m_client, addr);
+		endtask
+		
+		task exit();
+			_vmon_client_exit(m_client);
 		endtask
 		
 		task wait_endtest(output int status);
@@ -104,6 +102,9 @@ package vmon_client_pkg;
 	import "DPI-C" context task _vmon_client_exec(
 			chandle				client,
 			longint unsigned	addr);
+	
+	import "DPI-C" context task _vmon_client_exit(
+			chandle				client);
 	
 	import "DPI-C" context task _vmon_client_wait_endtest(
 			chandle				client,

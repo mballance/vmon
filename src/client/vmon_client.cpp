@@ -105,6 +105,10 @@ bool vmon_client::exec(uint64_t addr) {
 	return send_fixedlen_msg(0, LEN_16, VMON_EP0_EXEC, addr);
 }
 
+bool vmon_client::exit() {
+	return send_fixedlen_msg(0, LEN_2, VMON_EP0_EXIT, 0);
+}
+
 bool vmon_client::read(uint64_t addr, uint8_t *data, uint16_t len) {
 	uint8_t cs_t, cs;
 	if (!send_fixedlen_msg(0, LEN_16,
@@ -203,14 +207,19 @@ bool vmon_client::wait_endtest(int32_t *status) {
 }
 
 bool vmon_client::set_m2h_path(uint8_t p) {
-	bool ret = send_fixedlen_msg(0, LEN_2,
-			(VMON_EP0_SET_M2H_EP | (p << 8)), 0);
+	if (m_connected) {
+		bool ret = send_fixedlen_msg(0, LEN_2,
+				(VMON_EP0_SET_M2H_EP | (p << 8)), 0);
 
-	if (ret) {
+		if (ret) {
+			m_m2h_if_id = p;
+		}
+
+		return ret;
+	} else {
 		m_m2h_if_id = p;
+		return true;
 	}
-
-	return ret;
 }
 
 bool vmon_client::set_h2m_path(uint8_t p) {
