@@ -6,3 +6,15 @@
 	path = ve/simscripts
 	url = https://github.com/mballance/simscripts.git
 	branch = master
+[submodule "subprojects/sv_bfms"]
+	path = subprojects/sv_bfms
+	url = https://github.com/mballance/sv_bfms.git
+	branch = master
+[submodule "subprojects/std_protocol_if"]
+	path = subprojects/std_protocol_if
+	url = https://github.com/mballance/std_protocol_if.git
+	branch = master
+[submodule "subprojects/wb_sys_ip"]
+	path = subprojects/wb_sys_ip
+	url = https://github.com/mballance/wb_sys_ip.git
+	branch = master

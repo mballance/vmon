@@ -35,6 +35,12 @@ typedef enum {
 	VMON_EP0_MSG,
 
 	/**
+	 * Fixed-length message
+	 * [1..N]   - trace-point
+	 */
+	VMON_EP0_TP,
+
+	/**
 	 * Variable-length message
 	 * [0]      - command
 	 * [1..8]   - address
@@ -66,9 +72,14 @@ typedef enum {
 	 * [0]     - command
 	 * [4..7]  - status
 	 */
-	VMON_EP0_ENDTEST,
+	VMON_EP0_ENDTEST
 
 
 } vmon_ep0_msgs_e;
+
+
+// 0x02A5 (LE)
+#define VMON_EP0_TP24_HDR (0x02 << 8 | VMON_MSG_FIXLEN_REQ)
+#define VMON_EP0_TP24_VAL(x) (((x) << 8) + VMON_EP0_TP)
 
 #endif /* INCLUDED_VMON_EP0_MSGS */

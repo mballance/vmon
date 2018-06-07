@@ -27,4 +27,5 @@ typedef enum {
 	VMON_MSG_RSP_ERR=0xE1
 } vmon_msgs_e;
 
+
 #endif /* INCLUDED_VMON_MSGS_H */

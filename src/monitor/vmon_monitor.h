@@ -4,6 +4,7 @@
 #ifndef INCLUDED_VMON_MONITOR_H
 #define INCLUDED_VMON_MONITOR_H
 #include <stdint.h>
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,37 +17,26 @@ typedef struct vmon_closure_s {
 	void				*ud;
 } vmon_closure_t;
 
-typedef struct vmon_monitor_s {
-	uint8_t				h2m_id;
-	uint8_t				h2m_idx;
-	uint8_t				m2h_id;
-	uint8_t				m2h_idx;
-	vmon_closure_t		h2m[4];
-	vmon_closure_t		m2h[4];
-	uint8_t				active;
-	uint8_t				buf[16];
-} vmon_monitor_t;
+void vmon_monitor_init(void);
 
-extern vmon_monitor_t *glbl_mon;
-
-void vmon_monitor_init(vmon_monitor_t *mon);
-
-void vmon_monitor_add_h2m_path(
-		vmon_monitor_t		*mon,
+uint32_t vmon_monitor_add_h2m_path(
 		vmon_data_f			f,
 		void				*ud);
 
-void vmon_monitor_add_m2h_path(
-		vmon_monitor_t		*mon,
+uint32_t vmon_monitor_add_m2h_path(
 		vmon_data_f			f,
 		void				*ud);
 
 void vmon_monitor_msg(
-		vmon_monitor_t		*mon,
 		const char			*msg);
 
+void vmon_monitor_tracepoint(uint32_t tp);
+
+void vmon_printf(const char *fmt, ...);
+
+void vmon_vprintf(const char *fmt, va_list ap);
+
 void vmon_monitor_endtest(
-		vmon_monitor_t		*mon,
 		int32_t				status);
 
 /**
@@ -54,7 +44,7 @@ void vmon_monitor_endtest(
  *
  * Runs the main loop of the vmon_monitor
  */
-void vmon_monitor_run(vmon_monitor_t *mon);
+void vmon_monitor_run(void);
 
 
 #ifdef __cplusplus

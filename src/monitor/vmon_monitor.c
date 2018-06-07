@@ -6,20 +6,53 @@
 #include "vmon_msgs.h"
 #include "vmon_ep0_msgs.h"
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 
+typedef struct vmon_monitor_s {
+	uint8_t				h2m_id;
+	uint8_t				h2m_idx;
+	uint8_t				m2h_id;
+	uint8_t				m2h_idx;
+	uint8_t				m2h_buf[4];
+	uint8_t 			m2h_buf_idx;
+	vmon_closure_t		h2m[4];
+	vmon_closure_t		m2h[4];
+	uint8_t				active;
+	uint8_t				buf[16];
+} vmon_monitor_t;
 
-vmon_monitor_t *glbl_mon;
+vmon_monitor_t glbl_mon = {0};
 
-static uint8_t getb(vmon_monitor_t *mon) {
+static uint8_t vmon_monitor_getb(void) {
 	uint8_t d;
 
-	mon->h2m[mon->h2m_id].f(mon->h2m[mon->h2m_id].ud, &d, 1);
+	glbl_mon.h2m[glbl_mon.h2m_id].f(
+			glbl_mon.h2m[glbl_mon.h2m_id].ud, &d, 1);
 
 	return d;
 }
 
-static void outb(vmon_monitor_t *mon, uint8_t d) {
-	mon->m2h[mon->m2h_id].f(mon->m2h[mon->m2h_id].ud, &d, 1);
+static void vmon_monitor_outb(uint8_t d) {
+	glbl_mon.m2h_buf[glbl_mon.m2h_buf_idx++] = d;
+
+	if (glbl_mon.m2h_buf_idx >= 4) {
+		glbl_mon.m2h[glbl_mon.m2h_id].f(
+				glbl_mon.m2h[glbl_mon.m2h_id].ud,
+				glbl_mon.m2h_buf, 4);
+		glbl_mon.m2h_buf_idx = 0;
+	}
+}
+
+static void vmon_monitor_flush(void) {
+	if (glbl_mon.m2h_buf_idx > 0) {
+		glbl_mon.m2h[glbl_mon.m2h_id].f(
+				glbl_mon.m2h[glbl_mon.m2h_id].ud,
+				glbl_mon.m2h_buf, glbl_mon.m2h_buf_idx);
+		glbl_mon.m2h_buf_idx = 0;
+	}
+	glbl_mon.m2h[glbl_mon.m2h_id].f(
+			glbl_mon.m2h[glbl_mon.m2h_id].ud, 0, 0);
 }
 
 static uint8_t parity(uint8_t b) {
@@ -34,30 +67,27 @@ static uint8_t parity(uint8_t b) {
 	return !(ret&1);
 }
 
-void vmon_monitor_init(vmon_monitor_t  *mon) {
-	memset(mon, 0, sizeof(vmon_monitor_t));
+void vmon_monitor_init(void) {
+	memset(&glbl_mon, 0, sizeof(vmon_monitor_t));
 }
 
-void vmon_monitor_add_h2m_path(
-		vmon_monitor_t		*mon,
+uint32_t vmon_monitor_add_h2m_path(
 		vmon_data_f			f,
 		void				*ud) {
-	mon->h2m[mon->h2m_idx].f  = f;
-	mon->h2m[mon->h2m_idx].ud = ud;
-	mon->h2m_idx++;
+	glbl_mon.h2m[glbl_mon.h2m_idx].f  = f;
+	glbl_mon.h2m[glbl_mon.h2m_idx].ud = ud;
+	return (glbl_mon.h2m_idx++);
 }
 
-void vmon_monitor_add_m2h_path(
-		vmon_monitor_t		*mon,
+uint32_t vmon_monitor_add_m2h_path(
 		vmon_data_f			f,
 		void				*ud) {
-	mon->m2h[mon->m2h_idx].f  = f;
-	mon->m2h[mon->m2h_idx].ud = ud;
-	mon->m2h_idx++;
+	glbl_mon.m2h[glbl_mon.m2h_idx].f  = f;
+	glbl_mon.m2h[glbl_mon.m2h_idx].ud = ud;
+	return (glbl_mon.m2h_idx++);
 }
 
 void vmon_monitor_msg(
-		vmon_monitor_t		*mon,
 		const char			*msg) {
 	uint8_t cs;
 	uint32_t len = strlen(msg), i;
@@ -65,39 +95,51 @@ void vmon_monitor_msg(
 	uint32_t len_t = len + 1 + 1;
 
 	// Send an EP0 MSG message
-	outb(mon, VMON_MSG_VARLEN_REQ);
-	outb(mon, 0); // EP0
+	vmon_monitor_outb(VMON_MSG_VARLEN_REQ);
+	vmon_monitor_outb(0); // EP0
+
 	// Total length
-	outb(mon, len_t);
-	outb(mon, len_t>>8);
+	vmon_monitor_outb(len_t);
+	vmon_monitor_outb(len_t>>8);
 
 	cs = VMON_EP0_MSG;
-	outb(mon, VMON_EP0_MSG);
+	vmon_monitor_outb(VMON_EP0_MSG);
 
 	for (i=0; i<=len; i++) {
-		outb(mon, msg[i]);
+		vmon_monitor_outb(msg[i]);
 		cs += msg[i];
 	}
-	outb(mon, cs);
+	vmon_monitor_outb(cs);
+	vmon_monitor_flush(); // ensure the entire message is sent
 }
 
-void vmon_monitor_endtest(
-		vmon_monitor_t			*mon,
-		int32_t					status) {
+void vmon_monitor_tracepoint(uint32_t tp) {
+	vmon_monitor_outb(VMON_MSG_FIXLEN_REQ);
+	vmon_monitor_outb(0x02);
+	vmon_monitor_outb(VMON_EP0_TP);
+	vmon_monitor_outb(tp);
+	vmon_monitor_outb(tp >> 8);
+	vmon_monitor_outb(tp >> 16);
+
+	vmon_monitor_flush();
+}
+
+void vmon_monitor_endtest(int32_t status) {
 	int i;
 	uint8_t cmd_ep = (2 << 1); // EP=0, len=8
 	uint32_t stat_u = (uint32_t)status;
 	cmd_ep |= (parity(cmd_ep) & 1);
 
-	outb(mon, VMON_MSG_FIXLEN_REQ);
-	outb(mon, cmd_ep);
-	outb(mon, VMON_EP0_ENDTEST);
+	vmon_monitor_outb(VMON_MSG_FIXLEN_REQ);
+	vmon_monitor_outb(cmd_ep);
+	vmon_monitor_outb(VMON_EP0_ENDTEST);
 	for (i=0; i<3; i++) { // pad
-		outb(mon, 0);
+		vmon_monitor_outb(0);
 	}
 	for (i=0; i<4; i++) {
-		outb(mon, (stat_u >> (8*i)));
+		vmon_monitor_outb((stat_u >> (8*i)));
 	}
+	vmon_monitor_flush();
 }
 
 /**
@@ -106,7 +148,6 @@ void vmon_monitor_endtest(
  *
  */
 int vmon_monitor_handle_ep0_fixed(
-		vmon_monitor_t 	*mon,
 		uint32_t		len,
 		uint8_t			*buf) {
 	switch (buf[0]) {
@@ -119,33 +160,35 @@ int vmon_monitor_handle_ep0_fixed(
 			addr |= buf[8+i];
 		}
 
-		outb(mon, VMON_MSG_RSP_OK);
+		vmon_monitor_outb(VMON_MSG_RSP_OK);
+		vmon_monitor_flush();
 
 		// Do the exec
-		glbl_mon = mon;
 		vmon_monitor_exec(addr);
 	} break;
 
 	case VMON_EP0_SET_M2H_EP: {
 		uint8_t id = buf[1];
 
-		if (id < mon->m2h_idx) {
-			outb(mon, VMON_MSG_RSP_OK);
-			mon->m2h_id = id;
+		if (id < glbl_mon.m2h_idx) {
+			vmon_monitor_outb(VMON_MSG_RSP_OK);
+			glbl_mon.m2h_id = id;
 		} else {
-			outb(mon, VMON_MSG_RSP_ERR);
+			vmon_monitor_outb(VMON_MSG_RSP_ERR);
 		}
+		vmon_monitor_flush();
 	} break;
 
 	case VMON_EP0_SET_H2M_EP: {
 		uint8_t id = buf[1];
 
-		if (id < mon->h2m_idx) {
-			outb(mon, VMON_MSG_RSP_OK);
-			mon->h2m_id = id;
+		if (id < glbl_mon.h2m_idx) {
+			vmon_monitor_outb(VMON_MSG_RSP_OK);
+			glbl_mon.h2m_id = id;
 		} else {
-			outb(mon, VMON_MSG_RSP_ERR);
+			vmon_monitor_outb(VMON_MSG_RSP_ERR);
 		}
+		vmon_monitor_flush();
 	} break;
 
 	case VMON_EP0_READ: {
@@ -164,39 +207,40 @@ int vmon_monitor_handle_ep0_fixed(
 			len |= buf[i+9];
 		}
 
-		outb(mon, VMON_MSG_RSP_OK);
-		outb(mon, VMON_MSG_VARLEN_REQ);
-		outb(mon, 0); // EP
-		outb(mon, (len & 0xFF));
-		outb(mon, ((len >> 8) & 0xFF));
+		vmon_monitor_outb(VMON_MSG_RSP_OK);
+		vmon_monitor_outb(VMON_MSG_VARLEN_REQ);
+		vmon_monitor_outb(0); // EP
+		vmon_monitor_outb((len & 0xFF));
+		vmon_monitor_outb(((len >> 8) & 0xFF));
 
 		for (i=0; i<len; i++) {
 			tmp = vmon_monitor_read8(addr);
-			outb(mon, tmp);
+			vmon_monitor_outb(tmp);
 			cs += tmp;
 			addr++;
 		}
 
-		outb(mon, cs);
+		vmon_monitor_outb(cs);
+		vmon_monitor_flush();
 
 	} break;
 
 	case VMON_EP0_EXIT: {
-		outb(mon, VMON_MSG_RSP_OK);
-		mon->active = 0;
+		vmon_monitor_outb(VMON_MSG_RSP_OK);
+		vmon_monitor_flush();
+		glbl_mon.active = 0;
 	} break;
 
 	default:
-		outb(mon, VMON_MSG_RSP_ERR);
+		vmon_monitor_outb(VMON_MSG_RSP_ERR);
+		vmon_monitor_flush();
 		break;
 
 	}
 }
 
-void vmon_monitor_handle_ep0_var(
-		vmon_monitor_t 	*mon,
-		uint32_t		len) {
-	uint8_t c = getb(mon);
+void vmon_monitor_handle_ep0_var(uint32_t		len) {
+	uint8_t c = vmon_monitor_getb();
 
 	switch (c) {
 	case VMON_EP0_WRITE: {
@@ -205,7 +249,7 @@ void vmon_monitor_handle_ep0_var(
 		uint8_t t, cs=c, cs_t;
 
 		for (i=0; i<8; i++) {
-			t = getb(mon);
+			t = vmon_monitor_getb();
 			cs += t;
 			tmp = t;
 			tmp <<= 8*i;
@@ -213,46 +257,49 @@ void vmon_monitor_handle_ep0_var(
 		}
 
 		for (i=0; i<(len-8-1); i++) {
-			t=getb(mon);
+			t=vmon_monitor_getb();
 			cs += t;
 			vmon_monitor_write8(addr, t);
 			addr++;
 		}
 
 		// Finally, get the checksum
-		cs_t = getb(mon);
+		cs_t = vmon_monitor_getb();
 
 		if (cs == cs_t) {
-			outb(mon, VMON_MSG_RSP_OK);
+			vmon_monitor_outb(VMON_MSG_RSP_OK);
 		} else {
 //			fprintf(stdout, "Bad CS: expect 0x%02x ; 0x%02x\n", cs, cs_t);
-			outb(mon, VMON_MSG_RSP_ERR);
+			vmon_monitor_outb(VMON_MSG_RSP_ERR);
 		}
+		vmon_monitor_flush();
 	} break;
 
 	default:
-		outb(mon, VMON_MSG_RSP_ERR);
+		vmon_monitor_outb(VMON_MSG_RSP_ERR);
+		vmon_monitor_flush();
 		break;
 	}
 }
 
-void vmon_monitor_run(vmon_monitor_t *mon) {
+void vmon_monitor_run() {
 	uint8_t b, p;
 	uint32_t i;
 
-	mon->active = 1;
+	glbl_mon.active = 1;
 
-	while (mon->active) {
+	while (glbl_mon.active) {
 
 		// Wait for a header byte
-		b = getb(mon);
+		b = vmon_monitor_getb();
 
 		if (b == VMON_MSG_PING_REQ) {
 			// PING response
-			outb(mon, VMON_MSG_PING_ACK);
+			vmon_monitor_outb(VMON_MSG_PING_ACK);
+			vmon_monitor_flush();
 		} else if (b == VMON_MSG_FIXLEN_REQ) {
 			// fixed-length message
-			b = getb(mon);
+			b = vmon_monitor_getb();
 			p = parity((b & 0xFE)); // Don't include the parity bit
 
 			if (p == (b&1)) {
@@ -264,22 +311,23 @@ void vmon_monitor_run(vmon_monitor_t *mon) {
 				// 2, 4, 8, 16
 				len = 2 << ((b >> 1) & 0x3);
 				for (i=0; i<len; i++) {
-					mon->buf[i] = getb(mon);
+					glbl_mon.buf[i] = vmon_monitor_getb();
 				}
 
 				if (ep == 0) {
-					vmon_monitor_handle_ep0_fixed(mon, len, mon->buf);
+					vmon_monitor_handle_ep0_fixed(len, glbl_mon.buf);
 				} else {
 					// Only EP0 supported at the moment
-					outb(mon, VMON_MSG_RSP_ERR);
+					vmon_monitor_outb(VMON_MSG_RSP_ERR);
 				}
 			} else {
 				// error
-				outb(mon, VMON_MSG_RSP_ERR);
+				vmon_monitor_outb(VMON_MSG_RSP_ERR);
 			}
+			vmon_monitor_flush();
 		} else if (b == VMON_MSG_VARLEN_REQ) {
 			// variable-length message
-			b = getb(mon);
+			b = vmon_monitor_getb();
 			p = parity((b & 0xFE));
 
 			if (b == (b&1)) {
@@ -287,18 +335,19 @@ void vmon_monitor_run(vmon_monitor_t *mon) {
 				uint16_t len = 0;
 
 				for (i=0; i<2; i++) {
-					len |= (getb(mon) << 8*i);
+					len |= (vmon_monitor_getb() << 8*i);
 				}
 
 				if (ep == 0) {
-					vmon_monitor_handle_ep0_var(mon, len);
+					vmon_monitor_handle_ep0_var(len);
 				} else {
 					// Only EP0 supported at the moment
-					outb(mon, VMON_MSG_RSP_ERR);
+					vmon_monitor_outb(VMON_MSG_RSP_ERR);
 				}
 			} else {
-				outb(mon, VMON_MSG_RSP_ERR);
+				vmon_monitor_outb(VMON_MSG_RSP_ERR);
 			}
+			vmon_monitor_flush();
 		} else {
 			// unknown
 		}

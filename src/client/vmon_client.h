@@ -6,9 +6,12 @@
 #include "vmon_h2m_if.h"
 #include "vmon_m2h_if.h"
 #include "vmon_client_ep0_if.h"
+#include "vmon_m2h_poll_if.h"
 
+class vmon_m2h_client_ep;
 class vmon_client : protected vmon_client_ep0_if {
 public:
+	friend class vmon_m2h_client_ep;
 
 	vmon_client();
 
@@ -54,13 +57,32 @@ public:
 	// Read and process one message.
 	bool read_and_process_msg();
 
-	//
+	bool process_data(uint8_t *data, uint16_t len);
+
+private:
+
+	void process_msg(
+			uint8_t 	cmd,
+			uint8_t 	ep,
+			uint8_t		*data,
+			uint32_t	sz);
+
+	void process_ep0_msg(
+			uint8_t 	cmd,
+			uint8_t 	ep,
+			uint8_t		*data,
+			uint32_t	sz);
 
 protected:
 
 	virtual void msg(const char *msg);
 
 	virtual void endtest(int32_t status);
+
+	// vmon_client implementations must provide a poll function
+	int32_t poll(
+			const std::vector<vmon_m2h_if *> &m2h_l,
+			int32_t timeout=-1);
 
 private:
 
@@ -115,6 +137,7 @@ private:
 	bool								m_connected;
 	std::vector<vmon_m2h_if *>			m_m2h_if;
 	uint32_t							m_m2h_if_id;
+	std::vector<vmon_m2h_client_ep *>	m_m2h_client_l;
 	std::vector<vmon_h2m_if *>			m_h2m_if;
 	uint32_t							m_h2m_if_id;
 

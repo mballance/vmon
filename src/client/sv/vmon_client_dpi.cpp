@@ -1,13 +1,15 @@
 /****************************************************************************
  * vmon_client_dpi.cpp
  ****************************************************************************/
-#include "vmon_client.h"
+#include "vmon_dpi_client.h"
+#include "vmon_write_if.h"
 #include <string.h>
 #include <stdexcept>
 #include <stdio.h>
 
 extern "C" {
 void *_vmon_client_new(void);
+
 int _vmon_m2h_if_recv(
 		void			*if_h,
 		uint8_t			*data,
@@ -37,10 +39,24 @@ int _vmon_client_exit(void *client_p);
 
 int _vmon_client_wait_endtest(void *client_p, int *status);
 
+int _vmon_m2h_client_ep_write(
+		void			*m2h_h,
+		uint8_t			*data,
+		uint32_t		sz);
+
 }
 
 class vmon_client_dpi_m2h : public virtual vmon_m2h_if {
 public:
+
+	virtual void init(vmon_write_if *write_if, uint32_t ep) {
+		m_write_if = write_if;
+		m_ep = ep;
+	}
+
+	virtual void write(uint8_t *data, uint32_t sz) {
+		m_write_if->write(data, sz);
+	}
 
 	virtual int32_t recv(
 			void 		*data,
@@ -58,6 +74,10 @@ public:
 
 		return ret;
 	}
+
+private:
+	vmon_write_if					*m_write_if;
+	uint32_t						m_ep;
 };
 
 class vmon_client_dpi_h2m : public virtual vmon_h2m_if {
@@ -80,7 +100,7 @@ public:
 };
 
 void *_vmon_client_new() {
-	return new vmon_client();
+	return new vmon_dpi_client();
 }
 
 void *_vmon_client_add_m2h_if(void *client_p) {
@@ -89,10 +109,20 @@ void *_vmon_client_add_m2h_if(void *client_p) {
 	return ret;
 }
 
+int _vmon_m2h_client_ep_write(
+		void			*m2h_h,
+		uint8_t			*data,
+		uint32_t		sz) {
+	try {
+		static_cast<vmon_client_dpi_m2h *>(m2h_h)->write(data, sz);
+	} catch (std::runtime_error &e) {
+		return 1;
+	}
+	return 0;
+}
+
 void *_vmon_client_add_h2m_if(void *client_p) {
-	fprintf(stdout, "client_add_h2m_if: %p\n", client_p);
 	vmon_client_dpi_h2m *ret = new vmon_client_dpi_h2m();
-	fprintf(stdout, "ret: %p\n", ret);
 	static_cast<vmon_client *>(client_p)->add_h2m_if(ret);
 	return ret;
 }
@@ -100,7 +130,7 @@ void *_vmon_client_add_h2m_if(void *client_p) {
 int _vmon_client_connect(void *client_p, int *ok) {
 	try {
 		*ok = static_cast<vmon_client *>(client_p)->connect();
-	} catch (std::runtime_error) {
+	} catch (std::runtime_error &e) {
 		return 1;
 	}
 	return 0;
@@ -113,7 +143,7 @@ uint64_t _vmon_client_get_entry_addr(void *client_p, const char *path) {
 int _vmon_client_exec(void *client_p, uint64_t addr) {
 	try {
 		static_cast<vmon_client *>(client_p)->exec(addr);
-	} catch (std::runtime_error) {
+	} catch (std::runtime_error &e) {
 		return 1;
 	}
 	return 0;
@@ -122,7 +152,7 @@ int _vmon_client_exec(void *client_p, uint64_t addr) {
 int _vmon_client_exit(void *client_p) {
 	try {
 		static_cast<vmon_client *>(client_p)->exit();
-	} catch (std::runtime_error) {
+	} catch (std::runtime_error &e) {
 		return 1;
 	}
 	return 0;
@@ -131,7 +161,7 @@ int _vmon_client_exit(void *client_p) {
 int _vmon_client_wait_endtest(void *client_p, int *status) {
 	try {
 		static_cast<vmon_client *>(client_p)->wait_endtest(status);
-	} catch (std::runtime_error) {
+	} catch (std::runtime_error &e) {
 		return 1;
 	}
 	return 0;
@@ -144,7 +174,7 @@ int _vmon_client_read(
 		uint32_t 	len) {
 	try {
 		static_cast<vmon_client *>(client_p)->read(addr, data, len);
-	} catch (std::runtime_error) {
+	} catch (std::runtime_error &e) {
 		return 1;
 	}
 	return 0;

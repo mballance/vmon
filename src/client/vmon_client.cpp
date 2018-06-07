@@ -2,6 +2,7 @@
 #include "vmon_client.h"
 #include "vmon_msgs.h"
 #include "vmon_ep0_msgs.h"
+#include "vmon_m2h_client_ep.h"
 #include <stdio.h>
 #ifndef _WIN32
 #include <arpa/inet.h>
@@ -19,7 +20,7 @@ vmon_client::vmon_client() {
 	m_varlenmax = 0;
 	m_varlen = 0;
 
-	add_ep0_listener(this);
+//	add_ep0_listener(this);
 }
 
 vmon_client::~vmon_client() {
@@ -27,6 +28,9 @@ vmon_client::~vmon_client() {
 }
 
 void vmon_client::add_m2h_if(vmon_m2h_if *i) {
+	vmon_m2h_client_ep *client_ep = new vmon_m2h_client_ep(this);
+	m_m2h_client_l.push_back(client_ep);
+	i->init(client_ep, m_m2h_if.size());
 	m_m2h_if.push_back(i);
 }
 
@@ -233,6 +237,64 @@ bool vmon_client::set_h2m_path(uint8_t p) {
 	return ret;
 }
 
+void vmon_client::process_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32_t sz) {
+	fprintf(stdout, "process_msg: cmd=%d ep=%d sz=%d\n", cmd, ep, sz);
+	switch (cmd) {
+		case VMON_MSG_PING_REQ:
+		case VMON_MSG_PING_ACK:
+		case VMON_MSG_RSP_OK:
+		case VMON_MSG_RSP_ERR:
+			fprintf(stdout, "TODO: received some sort of response (%d)\n", cmd);
+			break;
+
+		case VMON_MSG_FIXLEN_REQ:
+		case VMON_MSG_VARLEN_REQ:
+			if (ep == 0) {
+				process_ep0_msg(cmd, ep, data, sz);
+			} else {
+				fprintf(stdout, "Note: ep=%d\n", ep);
+			}
+			break;
+
+	}
+
+
+}
+
+void vmon_client::process_ep0_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32_t sz) {
+	uint8_t msg_cmd = data[0];
+
+	switch (msg_cmd) {
+	case VMON_EP0_MSG: {
+		if (m_ep0_listeners.size() > 0) {
+			for (std::vector<vmon_client_ep0_if *>::const_iterator it=m_ep0_listeners.begin();
+					it!=m_ep0_listeners.end(); it++) {
+				(*it)->msg((const char *)&data[1]);
+			}
+		} else {
+			fprintf(stdout, "Note: %s\n", (const char *)&data[1]);
+		}
+		break;
+
+	case VMON_EP0_TP: {
+		uint32_t tp = 0;
+
+		tp = (data[1] | (data[2] << 8) | (data[3] << 16));
+
+		if (m_ep0_listeners.size() > 0) {
+		} else {
+			fprintf(stdout, "Note: testpoint %d\n", tp);
+		}
+
+	} break;
+
+	default:
+		fprintf(stdout, "Error: unknown EP0 message %d\n", msg_cmd);
+		break;
+	}
+	}
+}
+
 void vmon_client::msg(const char *msg) {
 
 }
@@ -334,6 +396,18 @@ void vmon_client::read_fixedlen_msg(
 		fprintf(stdout, "fixed-len parity error\n");
 	}
 }
+
+// Message-processing states
+// - Fixed-length
+//   - ReadHdr (1)
+//   - ReadDat (2, 4, 8, 16)
+//   - TODO: do we have checksum over data?
+//
+// - Variable-length
+//   - ReadHdr (1) Header (capture endpoint)
+//   - ReadLen (2) Packet length (I thought there was a checksum in here)
+//   - ReadDat (N+1) Data and checksum byte
+//
 
 uint8_t *vmon_client::read_varlen_msg(
 		uint8_t		*ep,
