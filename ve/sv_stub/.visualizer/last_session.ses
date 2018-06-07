@@ -1,0 +1,124 @@
+<!-- THIS IS TOOL GENERATED SESSION FILE. PLEASE DO NOT MODIFY THIS -->
+<!DOCTYPE visualizer_session>
+<session version="0.2">
+ <app argc="6">
+  <argv value="/u/release/10.7/questasim/../visualizer/bin/../linux_x86_64/hdlstudio" pos="0"/>
+  <argv value="-I/u/release/10.7/questasim/../visualizer/bin/../linux_x86_64/Visualizer/tb/incl" pos="1"/>
+  <argv value="-designfile" pos="2"/>
+  <argv value="/scratch1/ballance/rundir/sv_stub/foo_0001/design.bin" pos="3"/>
+  <argv value="-wavefile" pos="4"/>
+  <argv value="/scratch1/ballance/rundir/sv_stub/foo_0001/qwave.db" pos="5"/>
+ </app>
+ <window_config>
+  <dockareas right="256" left="467" bottom="187" top="0"/>
+  <window width="1920" x="-3" y="31" undocked="0" height="1077" visible="1" type="rtl"/>
+  <window width="1900" x="0" y="756" undocked="0" height="163" visible="1" type="transcript" dock_location="bottom"/>
+  <window width="1911" x="0" y="31" undocked="1" height="957" visible="1" type="wave"/>
+  <window width="1421" x="0" y="0" undocked="0" height="686" visible="1" type="source"/>
+  <window width="400" x="500" y="20" undocked="0" height="600" visible="0" type="watch"/>
+  <window width="417" x="840" y="60" undocked="0" height="513" visible="0" type="variables" dock_location="right"/>
+  <window width="400" x="20" y="20" undocked="0" height="400" visible="0" type="cone" dock_location="bottom"/>
+  <window x="0" y="0" undocked="0" visible="0" type="conntracer" dock_location="bottom"/>
+  <window width="400" x="20" y="20" undocked="0" height="400" visible="0" type="timecone" dock_location="bottom"/>
+  <window width="350" x="70" y="60" undocked="0" height="500" visible="0" type="memory"/>
+  <window width="300" x="60" y="40" undocked="0" height="400" visible="0" type="expression"/>
+  <window width="500" x="140" y="20" undocked="0" height="500" visible="0" type="msgviewer"/>
+  <window width="500" x="70" y="30" undocked="0" height="500" visible="0" type="search"/>
+  <window width="469" x="0" y="60" undocked="0" height="584" visible="0" type="testbench" dock_location="left"/>
+  <window width="400" x="20" y="20" undocked="0" height="400" visible="0" type="uvmschematic"/>
+  <window width="500" x="0" y="30" undocked="0" height="500" visible="0" type="fsmview"/>
+  <window width="695" x="1205" y="60" undocked="0" height="659" visible="0" type="drvrec" dock_location="right"/>
+  <window width="500" x="60" y="20" undocked="0" height="400" visible="0" type="classtrack"/>
+  <window width="500" x="60" y="40" undocked="0" height="600" visible="0" type="wavecmpresults"/>
+  <window width="256" x="1644" y="60" undocked="0" height="636" visible="0" type="generallist" dock_location="right"/>
+  <window width="300" x="60" y="40" undocked="0" height="400" visible="0" type="breakpoints"/>
+  <window width="615" x="60" y="40" undocked="0" height="515" visible="0" type="textbrowser"/>
+  <window width="600" x="70" y="40" undocked="0" height="500" visible="0" type="pslassertions"/>
+  <window width="615" x="100" y="100" undocked="0" height="415" visible="0" type="formalcone"/>
+  <window width="500" x="70" y="30" undocked="0" height="300" visible="0" type="assertions"/>
+  <window width="400" x="500" y="200" undocked="0" height="500" visible="0" type="uvmregisters"/>
+  <window width="1200" x="100" y="200" undocked="0" height="800" visible="0" type="transaction"/>
+  <window width="400" x="100" y="40" undocked="0" height="500" visible="0" type="classes"/>
+  <window width="400" x="100" y="40" undocked="0" height="500" visible="0" type="files"/>
+  <window width="400" x="100" y="40" undocked="0" height="500" visible="0" type="threads"/>
+  <window width="400" x="500" y="200" undocked="0" height="500" visible="0" type="instances"/>
+  <window width="400" x="500" y="200" undocked="0" height="500" visible="0" type="sequence"/>
+  <window width="469" x="0" y="60" undocked="0" height="690" visible="1" type="structure" dock_location="left"/>
+  <window width="500" x="100" y="500" undocked="0" height="300" visible="0" type="deadlogictab"/>
+  <window width="500" x="100" y="500" undocked="0" height="300" visible="0" type="constconetab"/>
+  <window width="400" x="500" y="200" undocked="0" height="500" visible="0" type="memusage"/>
+  <window width="400" x="500" y="200" undocked="0" height="500" visible="0" type="uvmfactory"/>
+  <window width="400" x="500" y="200" undocked="0" height="500" visible="0" type="uvmconfig"/>
+  <window width="400" x="20" y="20" undocked="0" height="400" visible="0" type="schematic"/>
+  <window width="400" x="20" y="20" undocked="0" height="400" visible="0" type="uvmcone"/>
+  <window width="400" x="20" y="20" undocked="0" height="400" visible="0" type="classschematic"/>
+  <window width="400" x="20" y="20" undocked="0" height="400" visible="0" type="blkdiagschematic"/>
+  <window width="350" x="30" y="60" undocked="0" height="150" visible="0" type="searchresults"/>
+ </window_config>
+ <wave_file_mgr>
+  <waveFile waveType="0" tagName="F0" fileName="/scratch1/ballance/rundir/sv_stub/foo_0001/qwave.db"/>
+ </wave_file_mgr>
+ <gui>
+  <main_window visible="1">
+   <srcbrowser primary="true" instancename="sv_stub_hdl.u_bfm">
+    <drv_rec_gui drivers="true" gui_mode="false"/>
+   </srcbrowser>
+   <edge_gui cur_selection="AnyEdge"/>
+  </main_window>
+  <watchTower_cur_setting curDisplayTimeUnitStr="1ns" curDisplayTimeUnit="-9" customDisplayTimeUnitListStr="" curActiveWaveFile="F0" curRadix="8">
+   <curTime hightime="0" lowtime="1070"/>
+  </watchTower_cur_setting>
+ </gui>
+ <wave_mgr sync_time_range="0">
+  <waveWindow signalHeight="23" displayGlobalView="1" wintype="4" showSecCursor="0" displayTimeUnitStr="1ns" swapRepresentationOfX="0" valueWidth="88" snapToEdge="1" displayRadixWithValue="0" secNudge="1" alignBaseName="0" showMarkers="1" displayLeadingZeros="0" displayFileTag="1" displayScopeName="1" primNudge="1" displayTimeUnit="-9" displayGrid="0" value_tooltip="0" trackViewToTime="1" waveWidth="1490" nameWidth="291">
+   <window name="Wave0">
+    <timeunit value="11"/>
+    <frequnit value="2"/>
+    <showdiff value="0"/>
+   </window>
+   <viewPort>
+    <beginTime hightime="0" lowtime="0"/>
+    <endTime hightime="0" lowtime="1000000"/>
+    <beginViewTime hightime="0" lowtime="1006"/>
+    <endViewTime hightime="0" lowtime="1143"/>
+    <beginLastViewTime hightime="0" lowtime="1006"/>
+    <endLastViewTime hightime="0" lowtime="1143"/>
+   </viewPort>
+   <primCursor hightime="0" lowtime="1070"/>
+   <wavetclcommands>
+    <tcl command="onerror resume"/>
+    <tcl command="wave update off"/>
+    <tcl command="wave clearselection"/>
+    <tcl command="wave group sv_stub_hdl -backgroundcolor #004466"/>
+    <tcl command="wave add -group sv_stub_hdl {sv_stub_hdl.addr[31:0]} -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl {sv_stub_hdl.byte_en[3:0]} -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl sv_stub_hdl.clk -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl {sv_stub_hdl.data[31:0]} -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl sv_stub_hdl.reset -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl sv_stub_hdl.write_en -tag F0 -radix hexadecimal"/>
+    <tcl command="wave insertion [expr [wave index insertpoint] + 1]"/>
+    <tcl command="wave group sv_stub_hdl.m_if.master -backgroundcolor #006666"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.WE -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.CYC -tag F0 -radix hexadecimal -select"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.TGA -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.TGC -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.DAT_R -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.STB -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.DAT_W -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.ACK -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.CTI -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.SEL -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.BTE -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.ERR -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.ADR -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.TGD_R -tag F0 -radix hexadecimal"/>
+    <tcl command="wave add -group sv_stub_hdl.m_if.master sv_stub_hdl.m_if.TGD_W -tag F0 -radix hexadecimal"/>
+    <tcl command="wave insertion [expr [wave index insertpoint] + 1]"/>
+    <tcl command="wave update on"/>
+    <tcl command=""/>
+   </wavetclcommands>
+  </waveWindow>
+ </wave_mgr>
+ <windows/>
+ <dut selection=" sv_stub_hdl.u_bfm"/>
+</session>
