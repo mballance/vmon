@@ -282,8 +282,12 @@ void vmon_client::process_ep0_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32
 		tp = (data[1] | (data[2] << 8) | (data[3] << 16));
 
 		if (m_ep0_listeners.size() > 0) {
+			for (std::vector<vmon_client_ep0_if *>::const_iterator it=m_ep0_listeners.begin();
+					it!=m_ep0_listeners.end(); it++) {
+				(*it)->tracepoint(tp);
+			}
 		} else {
-			fprintf(stdout, "Note: testpoint %d\n", tp);
+			fprintf(stdout, "Note: tracepoint %d\n", tp);
 		}
 
 	} break;

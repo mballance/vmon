@@ -10,6 +10,8 @@ public:
 
 	virtual void msg(const char *msg) = 0;
 
+	virtual void tracepoint(int unsigned tp) = 0;
+
 	virtual void endtest(int32_t status) = 0;
 
 };
