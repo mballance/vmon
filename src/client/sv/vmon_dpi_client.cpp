@@ -6,14 +6,29 @@
  */
 
 #include "vmon_dpi_client.h"
+#include "vmon_client_dpi.h"
 
 vmon_dpi_client::vmon_dpi_client() {
-	// TODO Auto-generated constructor stub
-
+	m_scope = svGetScope();
+	add_ep0_listener(this);
 }
 
 vmon_dpi_client::~vmon_dpi_client() {
 	// TODO Auto-generated destructor stub
+}
+
+void vmon_dpi_client::msg(const char *msg) {
+	svSetScope(m_scope);
+	_vmon_client_ep0_msg(this, msg);
+}
+
+void vmon_dpi_client::tracepoint(int unsigned tp) {
+	svSetScope(m_scope);
+	_vmon_client_ep0_tracepoint(this, tp);
+}
+
+void vmon_dpi_client::endtest(int32_t status) {
+
 }
 
 int32_t vmon_dpi_client::poll(

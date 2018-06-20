@@ -1,50 +1,12 @@
 /****************************************************************************
  * vmon_client_dpi.cpp
  ****************************************************************************/
+#include "vmon_client_dpi.h"
 #include "vmon_dpi_client.h"
 #include "vmon_write_if.h"
 #include <string.h>
 #include <stdexcept>
 #include <stdio.h>
-
-extern "C" {
-void *_vmon_client_new(void);
-
-int _vmon_m2h_if_recv(
-		void			*if_h,
-		uint8_t			*data,
-		int				size,
-		int				timeout,
-		int				*ret);
-
-int _vmon_h2m_if_send(
-		void			*if_h,
-		uint8_t			*data,
-		int				size,
-		int				*ret);
-
-void *_vmon_client_add_m2h_if(void *);
-
-void *_vmon_client_add_h2m_if(void *);
-
-int _vmon_client_connect(void *, int *);
-
-int _vmon_client_read(void *, uint64_t, uint8_t *, uint32_t);
-
-uint64_t _vmon_client_get_entry_addr(void *, const char *path);
-
-int _vmon_client_exec(void *client_p, uint64_t addr);
-
-int _vmon_client_exit(void *client_p);
-
-int _vmon_client_wait_endtest(void *client_p, int *status);
-
-int _vmon_m2h_client_ep_write(
-		void			*m2h_h,
-		uint8_t			*data,
-		uint32_t		sz);
-
-}
 
 class vmon_client_dpi_m2h : public virtual vmon_m2h_if {
 public:

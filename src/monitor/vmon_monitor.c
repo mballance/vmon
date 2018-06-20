@@ -9,6 +9,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+
 typedef struct vmon_monitor_s {
 	uint8_t				h2m_id;
 	uint8_t				h2m_idx;
@@ -20,9 +21,13 @@ typedef struct vmon_monitor_s {
 	vmon_closure_t		m2h[4];
 	uint8_t				active;
 	uint8_t				buf[16];
+	uint32_t			lock;
 } vmon_monitor_t;
 
 vmon_monitor_t glbl_mon = {0};
+
+#define vmon_lock(ptr) while (!__sync_bool_compare_and_swap((ptr), 0, 1)) { ; }
+#define vmon_unlock(ptr) while (!__sync_bool_compare_and_swap((ptr), 1, 0)) { ; }
 
 static uint8_t vmon_monitor_getb(void) {
 	uint8_t d;
@@ -68,7 +73,12 @@ static uint8_t parity(uint8_t b) {
 }
 
 void vmon_monitor_init(void) {
-	memset(&glbl_mon, 0, sizeof(vmon_monitor_t));
+	glbl_mon.h2m_id = 0;
+	glbl_mon.h2m_idx = 0;
+	glbl_mon.m2h_id = 0;
+	glbl_mon.m2h_idx = 0;
+	glbl_mon.m2h_buf_idx = 0;
+	glbl_mon.active = 0;
 }
 
 uint32_t vmon_monitor_add_h2m_path(
@@ -87,12 +97,19 @@ uint32_t vmon_monitor_add_m2h_path(
 	return (glbl_mon.m2h_idx++);
 }
 
-void vmon_monitor_msg(
-		const char			*msg) {
+void vmon_monitor_msg(const char *msg) {
 	uint8_t cs;
-	uint32_t len = strlen(msg), i;
+	uint32_t len = 0, len_t, i;
+	const char *t = msg;
+
+	while (t && *t) {
+		len++;
+		t++;
+	}
+
 	// strlen+cmd+null
-	uint32_t len_t = len + 1 + 1;
+	len_t = len + 1 + 1;
+
 
 	// Send an EP0 MSG message
 	vmon_monitor_outb(VMON_MSG_VARLEN_REQ);
@@ -114,6 +131,7 @@ void vmon_monitor_msg(
 }
 
 void vmon_monitor_tracepoint(uint32_t tp) {
+	vmon_lock(&glbl_mon.lock);
 	vmon_monitor_outb(VMON_MSG_FIXLEN_REQ);
 	vmon_monitor_outb(0x02);
 	vmon_monitor_outb(VMON_EP0_TP);
@@ -122,6 +140,7 @@ void vmon_monitor_tracepoint(uint32_t tp) {
 	vmon_monitor_outb(tp >> 16);
 
 	vmon_monitor_flush();
+	vmon_unlock(&glbl_mon.lock);
 }
 
 void vmon_monitor_endtest(int32_t status) {

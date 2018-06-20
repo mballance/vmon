@@ -19,6 +19,7 @@ vmon_client::vmon_client() {
 
 	m_varlenmax = 0;
 	m_varlen = 0;
+	m_debug = false;
 
 //	add_ep0_listener(this);
 }
@@ -238,7 +239,9 @@ bool vmon_client::set_h2m_path(uint8_t p) {
 }
 
 void vmon_client::process_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32_t sz) {
-	fprintf(stdout, "process_msg: cmd=%d ep=%d sz=%d\n", cmd, ep, sz);
+	if (m_debug) {
+		fprintf(stdout, "process_msg: cmd=%d ep=%d sz=%d\n", cmd, ep, sz);
+	}
 	switch (cmd) {
 		case VMON_MSG_PING_REQ:
 		case VMON_MSG_PING_ACK:
@@ -345,7 +348,9 @@ bool vmon_client::send_fixedlen_msg(
 	msg[1] = ((ep & 0x1F) << 3) | (len << 1);
 	msg[1] |= parity(msg[1]);
 
-	fprintf(stdout, "fixedlen: data1=0x%08llx data2=0x%08llx\n", data1, data2);
+	if (m_debug) {
+		fprintf(stdout, "fixedlen: data1=0x%08llx data2=0x%08llx\n", data1, data2);
+	}
 
 	for (uint32_t i=0; i<byte_len; i++) {
 		msg[2+i] = (data1 >> 8*i);

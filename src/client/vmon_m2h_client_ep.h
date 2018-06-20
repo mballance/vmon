@@ -39,6 +39,7 @@ private:
 	void skip(uint32_t amt);
 
 private:
+	bool					m_debug;
 	vmon_client				*m_client;
 	uint8_t					*m_data;
 	uint32_t				m_data_read_idx;

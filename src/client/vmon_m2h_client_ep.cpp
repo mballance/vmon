@@ -23,6 +23,7 @@ vmon_m2h_client_ep::vmon_m2h_client_ep(vmon_client *client) {
 	m_msg_cmd = 0;
 	m_msg_len = 0;
 	m_msg_fixed = false;
+	m_debug = false;
 }
 
 vmon_m2h_client_ep::~vmon_m2h_client_ep() {
@@ -66,7 +67,9 @@ void vmon_m2h_client_ep::process() {
 		case MsgState_Cmd: {
 			m_msg_cmd = getb();
 
-			fprintf(stdout, "MsgState_Cmd: %d\n", m_msg_cmd);
+			if (m_debug) {
+				fprintf(stdout, "MsgState_Cmd: %d\n", m_msg_cmd);
+			}
 
 			switch (m_msg_cmd) {
 			case VMON_MSG_PING_REQ:
@@ -101,7 +104,9 @@ void vmon_m2h_client_ep::process() {
 			}
 			m_msg_state = MsgState_Data;
 
-			fprintf(stdout, "MsgState_FixedLenHdr: %d\n", m_msg_len);
+			if (m_debug) {
+				fprintf(stdout, "MsgState_FixedLenHdr: %d\n", m_msg_len);
+			}
 		} break;
 
 		case MsgState_VarLenHdr: {

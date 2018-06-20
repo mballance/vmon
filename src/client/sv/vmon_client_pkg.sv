@@ -8,10 +8,11 @@
  * TODO: Add package documentation
  */
 package vmon_client_pkg;
+	import vmon_client_api_pkg::*;
 
 	typedef class vmon_client;
 	
-	class vmon_m2h_if;
+	class vmon_m2h_if extends vmon_m2h_api;
 		chandle						m_client_ep;
 		vmon_client					m_client;
 
@@ -37,15 +38,17 @@ package vmon_client_pkg;
 	endclass
 
 	// Global maps between native and SV handles
-	vmon_m2h_if			m_m2h_if[chandle];
-	vmon_h2m_if			m_h2m_if[chandle];
 	
 	class vmon_client;
 		chandle						m_client;
 		vmon_m2h_if					m_m2h_if_l[$];
 		static vmon_client			m_client_map[chandle];
 		static vmon_client_ep0_if	m_ep0_client_if[chandle];
+		static vmon_h2m_if			m_h2m_if[chandle];
+		static vmon_m2h_if			m_m2h_if[chandle];
 		semaphore					m_m2h_write_sem = new(0);
+		
+		vmon_client_ep0_if			m_ep0_listeners[$];
 		
 		function new();
 			m_client = _vmon_client_new();
@@ -120,6 +123,14 @@ package vmon_client_pkg;
 			m_m2h_write_sem.put(1);
 		endtask
 		
+		function void ep0_msg(string msg);
+			$display("TODO: ep0_msg %0s", msg);
+		endfunction
+		
+		function void ep0_tracepoint(int unsigned tp);
+			$display("TODO: ep0_tracepoint %0d", tp);
+		endfunction
+		
 	endclass
 	
 
@@ -166,7 +177,7 @@ package vmon_client_pkg;
 		input int				size,
 		input int				timeout,
 		output int				ret);
-		vmon_m2h_if h = m_m2h_if[if_h];
+		vmon_m2h_if h = vmon_client::m_m2h_if[if_h];
 		$display("TODO: _vmon_m2h_if_recv");
 //		h.recv(data, size, timeout, ret);
 	endtask
@@ -177,7 +188,7 @@ package vmon_client_pkg;
 		input byte	unsigned	data[64],
 		input int				size,
 		output int				ret);
-		vmon_h2m_if h = m_h2m_if[if_h];
+		vmon_h2m_if h = vmon_client::m_h2m_if[if_h];
 		h.send(data, size, ret);
 	endtask
 	export "DPI-C" task _vmon_h2m_if_send;
@@ -192,12 +203,19 @@ package vmon_client_pkg;
 	endtask
 	export "DPI-C" task _vmon_client_poll;
 	
-	task automatic _vmon_client_ep0_msg(
-		input chandle			ep0_if_h,
+	function automatic void _vmon_client_ep0_msg(
+		input chandle			client_h,
 		input string			msg);
-		vmon_client::m_ep0_client_if[ep0_if_h].msg(msg);
-	endtask
-	export "DPI-C" task _vmon_client_ep0_msg;
+		vmon_client::m_client_map[client_h].ep0_msg(msg);
+	endfunction
+	export "DPI-C" function _vmon_client_ep0_msg;
+	
+	function automatic void _vmon_client_ep0_tracepoint(
+		input chandle			client_h,
+		int unsigned			tp);
+		vmon_client::m_client_map[client_h].ep0_tracepoint(tp);
+	endfunction
+	export "DPI-C" function _vmon_client_ep0_tracepoint;
 	
 	task automatic _vmon_client_ep0_endtest(
 		input chandle			ep0_if_h,
@@ -205,7 +223,7 @@ package vmon_client_pkg;
 		vmon_client::m_ep0_client_if[ep0_if_h].endtest(status);
 	endtask
 	export "DPI-C" task _vmon_client_ep0_endtest;
-
+	
 endpackage
 
 

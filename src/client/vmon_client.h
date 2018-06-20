@@ -9,7 +9,7 @@
 #include "vmon_m2h_poll_if.h"
 
 class vmon_m2h_client_ep;
-class vmon_client : protected vmon_client_ep0_if {
+class vmon_client {
 public:
 	friend class vmon_m2h_client_ep;
 
@@ -134,6 +134,7 @@ private:
 			uint8_t				*buf);
 
 private:
+	bool								m_debug;
 	bool								m_connected;
 	std::vector<vmon_m2h_if *>			m_m2h_if;
 	uint32_t							m_m2h_if_id;
