@@ -61,6 +61,10 @@ void _vmon_client_ep0_tracepoint(
 		void			*client_h,
 		int unsigned 	tp);
 
+void _vmon_client_ep0_endtest(
+		void			*client_h,
+		int				status);
+
 
 #ifdef __cplusplus
 }

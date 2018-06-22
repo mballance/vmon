@@ -24,10 +24,10 @@ typedef struct vmon_monitor_s {
 	uint32_t			lock;
 } vmon_monitor_t;
 
-vmon_monitor_t glbl_mon = {0};
+static vmon_monitor_t glbl_mon = {0};
 
-#define vmon_lock(ptr) while (!__sync_bool_compare_and_swap((ptr), 0, 1)) { ; }
-#define vmon_unlock(ptr) while (!__sync_bool_compare_and_swap((ptr), 1, 0)) { ; }
+#define vmon_lock(ptr)  // while (!__sync_bool_compare_and_swap((ptr), 0, 1)) { ; }
+#define vmon_unlock(ptr) // while (!__sync_bool_compare_and_swap((ptr), 1, 0)) { ; }
 
 static uint8_t vmon_monitor_getb(void) {
 	uint8_t d;
@@ -73,6 +73,7 @@ static uint8_t parity(uint8_t b) {
 }
 
 void vmon_monitor_init(void) {
+	glbl_mon.lock = 0;
 	glbl_mon.h2m_id = 0;
 	glbl_mon.h2m_idx = 0;
 	glbl_mon.m2h_id = 0;

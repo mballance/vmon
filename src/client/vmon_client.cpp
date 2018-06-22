@@ -295,6 +295,19 @@ void vmon_client::process_ep0_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32
 
 	} break;
 
+	case VMON_EP0_ENDTEST: {
+		int32_t status = (int32_t)(data[4] | (data[5] << 8) | (data[6] << 16) | (data[7] << 24));
+
+		if (m_ep0_listeners.size() > 0) {
+			for (std::vector<vmon_client_ep0_if *>::const_iterator it=m_ep0_listeners.begin();
+					it!=m_ep0_listeners.end(); it++) {
+				(*it)->endtest(status);
+			}
+		} else {
+			fprintf(stdout, "Note: endtest %d\n", status);
+		}
+	} break;
+
 	default:
 		fprintf(stdout, "Error: unknown EP0 message %d\n", msg_cmd);
 		break;

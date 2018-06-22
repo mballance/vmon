@@ -28,7 +28,8 @@ void vmon_dpi_client::tracepoint(int unsigned tp) {
 }
 
 void vmon_dpi_client::endtest(int32_t status) {
-
+	svSetScope(m_scope);
+	_vmon_client_ep0_endtest(this, status);
 }
 
 int32_t vmon_dpi_client::poll(

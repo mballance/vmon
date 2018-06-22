@@ -30,12 +30,8 @@ package vmon_client_pkg;
 			input int				size,
 			output int				ret);
 	endclass
-	
-	interface class vmon_client_ep0_if;
-		pure virtual task msg(string msg);
-		
-		pure virtual task endtest(int status);
-	endclass
+
+	`include "vmon_client_ep0_if.svh"
 
 	// Global maps between native and SV handles
 	
@@ -53,6 +49,10 @@ package vmon_client_pkg;
 		function new();
 			m_client = _vmon_client_new();
 			m_client_map[m_client] = this;
+		endfunction
+		
+		function void add_ep0_listener(vmon_client_ep0_if l);
+			m_ep0_listeners.push_back(l);
 		endfunction
 		
 		function void add_m2h_if(vmon_m2h_if ifc);
@@ -123,12 +123,22 @@ package vmon_client_pkg;
 			m_m2h_write_sem.put(1);
 		endtask
 		
-		function void ep0_msg(string msg);
-			$display("TODO: ep0_msg %0s", msg);
+		function void ep0_msg(string m);
+			foreach (m_ep0_listeners[i]) begin
+				m_ep0_listeners[i].msg(m);
+			end
 		endfunction
 		
 		function void ep0_tracepoint(int unsigned tp);
-			$display("TODO: ep0_tracepoint %0d", tp);
+			foreach (m_ep0_listeners[i]) begin
+				m_ep0_listeners[i].tracepoint(tp);
+			end
+		endfunction
+		
+		function void ep0_endtest(int status);
+			foreach (m_ep0_listeners[i]) begin
+				m_ep0_listeners[i].endtest(status);
+			end
 		endfunction
 		
 	endclass
@@ -217,12 +227,12 @@ package vmon_client_pkg;
 	endfunction
 	export "DPI-C" function _vmon_client_ep0_tracepoint;
 	
-	task automatic _vmon_client_ep0_endtest(
-		input chandle			ep0_if_h,
+	function automatic void _vmon_client_ep0_endtest(
+		input chandle			client_h,
 		input int				status);
-		vmon_client::m_ep0_client_if[ep0_if_h].endtest(status);
-	endtask
-	export "DPI-C" task _vmon_client_ep0_endtest;
+		vmon_client::m_client_map[client_h].ep0_endtest(status);
+	endfunction
+	export "DPI-C" function _vmon_client_ep0_endtest;
 	
 endpackage
 
