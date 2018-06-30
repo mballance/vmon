@@ -1,0 +1,3 @@
+std_protocol_if@https://github.com/mballance/std_protocol_if.git
+sv_bfms@https://github.com/mballance/sv_bfms.git
+wb_sys_ip@https://github.com/mballance/wb_sys_ip.git
