@@ -1,6 +1,9 @@
 
 VMON_CLIENT_SV_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 
+VMON := $(abspath $(VMON_CLIENT_SV_DIR)/../../..)
+export VMON
+
 ifneq (1,$(RULES))
 
 VMON_CLIENT_SV_SRC := $(notdir $(wildcard $(VMON_CLIENT_SV_DIR)/*.cpp))
