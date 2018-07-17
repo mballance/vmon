@@ -11,7 +11,8 @@
  */
 module wb_vmon_monitor #(
 		parameter int WB_ADDR_WIDTH = 32,
-		parameter int WB_DATA_WIDTH = 32)(
+		parameter int WB_DATA_WIDTH = 32,
+		parameter int ADDRESS       = 'h0000_0000)(
 	input								clk_i,
 	input								rst_i,
 	input[(WB_ADDR_WIDTH-1):0]			ADR,
@@ -23,8 +24,11 @@ module wb_vmon_monitor #(
 	input								ACK,
 	input								WE);
 
-	wb_vmon_monitor_if #(WB_ADDR_WIDTH, WB_DATA_WIDTH) u_core();
-	
+	wb_vmon_monitor_if #(
+			WB_ADDR_WIDTH, 
+			WB_DATA_WIDTH) u_core();
+
+	assign u_core.ADDRESS = ADDRESS;
 	assign u_core.clk_i = clk_i;
 	assign u_core.rst_i = rst_i;
 	assign u_core.ADR = ADR;
@@ -58,10 +62,15 @@ interface wb_vmon_monitor_if #(
 	byte unsigned					data[64];
 	int unsigned					size;
 	
+	wire[WB_ADDR_WIDTH-1:0]         ADDRESS;
+
+	wire addr_eq = (ADR[WB_ADDR_WIDTH-1:$clog2(WB_DATA_WIDTH)-1] == 
+			ADDRESS[WB_ADDR_WIDTH-1:$clog2(WB_DATA_WIDTH)-1]);
+	
 	always @(posedge clk_i) begin
 		if (rst_i == 0) begin
 			// We've got a write
-			if (CYC && STB && ACK && WE) begin
+			if (CYC && STB && ACK && WE && addr_eq) begin
 				if (api == null) begin
 					$display("ERROR: api for %m is null");
 				end

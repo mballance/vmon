@@ -6,13 +6,16 @@ import chisel3.experimental._
 import chisel3.core.BlackBox
 import std_protocol_if.Wishbone
 
-class WishboneVmonMonitor(p : Wishbone.Parameters) extends Module {
+class WishboneVmonMonitor(
+    p : Wishbone.Parameters,
+    ADDRESS : Int) extends Module {
   
   val io = IO(new Bundle {
     val m = Input(new Wishbone(p))
   });
   
-  val vmon_monitor = Module(new wb_vmon_monitor(p.ADDR_WIDTH, p.DATA_WIDTH))
+  val vmon_monitor = Module(new wb_vmon_monitor(
+      p.ADDR_WIDTH, p.DATA_WIDTH, ADDRESS))
   
   vmon_monitor.io.clk_i := clock
   vmon_monitor.io.rst_i := reset
@@ -28,9 +31,11 @@ class WishboneVmonMonitor(p : Wishbone.Parameters) extends Module {
 
 class wb_vmon_monitor(
     val WB_ADDR_WIDTH : Int = 32,
-    val WB_DATA_WIDTH : Int = 32) extends BlackBox(
+    val WB_DATA_WIDTH : Int = 32,
+    val ADDRESS       : Int) extends BlackBox(
         Map("WB_ADDR_WIDTH" -> WB_ADDR_WIDTH,
-            "WB_DATA_WIDTH" -> WB_DATA_WIDTH)) {
+            "WB_DATA_WIDTH" -> WB_DATA_WIDTH,
+            "ADDRESS" -> ADDRESS)) {
           
     val io = IO(new Bundle {
       val clk_i = Input(Clock())
