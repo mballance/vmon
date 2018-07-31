@@ -58,9 +58,9 @@ interface wb_vmon_monitor_if #(
 	wire								ACK;
 	wire								WE;
 	
-`ifdef HAVE_HDL_PROXY_CLASSES
+`ifdef HAVE_HDL_VIRTUAL_INTERFACE
 	vmon_m2h_api					api;
-`endif /* HAVE_HDL_PROXY_CLASSES */
+`endif /* HAVE_HDL_VIRTUAL_INTERFACE */
 	byte unsigned					data[64];
 	int unsigned					size;
 	
@@ -73,11 +73,11 @@ interface wb_vmon_monitor_if #(
 		if (rst_i == 0) begin
 			// We've got a write
 			if (CYC && STB && ACK && WE && addr_eq) begin
-`ifdef HAVE_HDL_PROXY_CLASSES
+`ifdef HAVE_HDL_VIRTUAL_INTERFACE
 				if (api == null) begin
 					$display("ERROR: api for %m is null");
 				end
-`endif /* HAVE_HDL_PROXY_CLASSES */
+`endif /* HAVE_HDL_VIRTUAL_INTERFACE */
 				
 				case (SEL)
 					'b0001: begin
@@ -115,11 +115,15 @@ interface wb_vmon_monitor_if #(
 					end 
 					default: $display("Unrecognized SEL 'b%04b", SEL);
 				endcase
-`ifdef HAVE_HDL_PROXY_CLASSES
-				api.write(data, size);
+`ifdef HAVE_HDL_VIRTUAL_INTERFACE
+				if (api != null) begin
+					api.write(data, size);
+				end else begin
+					$display("ERROR: api for %m is null");
+				end
 `else
 				$display("VMON: write sz=%0d", size);
-`endif /* HAVE_HDL_PROXY_CLASSES */
+`endif /* HAVE_HDL_VIRTUAL_INTERFACE */
 			end
 		end 
 	end
