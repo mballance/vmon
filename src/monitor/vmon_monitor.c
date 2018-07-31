@@ -108,8 +108,8 @@ void vmon_monitor_msg(const char *msg) {
 		t++;
 	}
 
-	// strlen+cmd+null
-	len_t = len + 1 + 1;
+	// strlen+cmd+null+checksum
+	len_t = len + 1 + 1 + 1;
 
 
 	// Send an EP0 MSG message

@@ -11,6 +11,13 @@ PROJECT := $(notdir $(ROOT_DIR))
 PACKAGES_DIR ?= $(ROOT_DIR)/packages
 LIB_DIR = $(ROOT_DIR)/lib
 
+PYYAML_VERSION = 3.13
+PYYAML_DIR := pyyaml-$(PYYAML_VERSION)
+PYYAML_URL := https://github.com/yaml/pyyaml/archive/$(PYYAML_VERSION).tar.gz
+JINJA2_VERSION = 2.10
+JINJA2_DIR = Jinja2-$(JINJA2_VERSION)
+JINJA2_URL := https://github.com/pallets/jinja/releases/download/$(JINJA2_VERSION)/Jinja2-$(JINJA2_VERSION).tar.gz
+
 ifneq (true,$(VERBOSE))
 Q=@
 endif

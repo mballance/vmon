@@ -71,9 +71,6 @@ interface wb_vmon_monitor_if #(
 		if (rst_i == 0) begin
 			// We've got a write
 			if (CYC && STB && ACK && WE && addr_eq) begin
-				if (api == null) begin
-					$display("ERROR: api for %m is null");
-				end
 				
 				case (SEL)
 					'b0001: begin
@@ -112,7 +109,11 @@ interface wb_vmon_monitor_if #(
 					default: $display("Unrecognized SEL 'b%04b", SEL);
 				endcase
 				
-				api.write(data, size);
+				if (api != null) begin
+					api.write(data, size);
+				end else begin
+					$display("ERROR: api for %m is null");
+				end
 			end
 		end 
 	end
