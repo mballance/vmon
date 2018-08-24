@@ -26,8 +26,25 @@ typedef struct vmon_monitor_s {
 
 static vmon_monitor_t glbl_mon = {0};
 
-#define vmon_lock(ptr)  // while (!__sync_bool_compare_and_swap((ptr), 0, 1)) { ; }
-#define vmon_unlock(ptr) // while (!__sync_bool_compare_and_swap((ptr), 1, 0)) { ; }
+void __attribute__((weak)) vmon_monitor_lock_impl(uint32_t *l) {
+	// Do nothing
+}
+
+void __attribute__((weak)) vmon_monitor_unlock_impl(uint32_t *l) {
+	// Do nothing
+}
+
+void __attribute__((weak)) vmon_monitor_lock_init_impl(uint32_t *l) {
+	// Do nothing
+}
+
+void vmon_monitor_lock(void) {
+	vmon_monitor_lock_impl(&glbl_mon.lock);
+}
+
+void vmon_monitor_unlock(void) {
+	vmon_monitor_unlock_impl(&glbl_mon.lock);
+}
 
 static uint8_t vmon_monitor_getb(void) {
 	uint8_t d;
@@ -39,6 +56,9 @@ static uint8_t vmon_monitor_getb(void) {
 }
 
 static void vmon_monitor_outb(uint8_t d) {
+//	fprintf(stdout, "OUTB: buf_idx=%d m2h_id=%d\n",
+//			glbl_mon.m2h_buf_idx, glbl_mon.m2h_id);
+//	fflush(stdout);
 	glbl_mon.m2h_buf[glbl_mon.m2h_buf_idx++] = d;
 
 	if (glbl_mon.m2h_buf_idx >= 4) {
@@ -132,7 +152,7 @@ void vmon_monitor_msg(const char *msg) {
 }
 
 void vmon_monitor_tracepoint(uint32_t tp) {
-	vmon_lock(&glbl_mon.lock);
+	vmon_monitor_lock_impl(&glbl_mon.lock);
 	vmon_monitor_outb(VMON_MSG_FIXLEN_REQ);
 	vmon_monitor_outb(0x02);
 	vmon_monitor_outb(VMON_EP0_TP);
@@ -141,7 +161,7 @@ void vmon_monitor_tracepoint(uint32_t tp) {
 	vmon_monitor_outb(tp >> 16);
 
 	vmon_monitor_flush();
-	vmon_unlock(&glbl_mon.lock);
+	vmon_monitor_unlock_impl(&glbl_mon.lock);
 }
 
 void vmon_monitor_endtest(int32_t status) {
@@ -300,6 +320,28 @@ void vmon_monitor_handle_ep0_var(uint32_t		len) {
 		vmon_monitor_flush();
 		break;
 	}
+}
+
+void vmon_monitor_fixedlen_msg(
+		uint8_t					ep,
+		vmon_fixedlen_e			len,
+		uint8_t					*data) {
+	uint32_t len_b = 2 << len;
+	uint32_t i;
+	uint8_t hdr;
+	vmon_monitor_lock_impl(&glbl_mon.lock);
+
+	vmon_monitor_outb(VMON_MSG_FIXLEN_REQ);
+	hdr = (ep << 3) | (len << 1);
+	vmon_monitor_outb(hdr);
+
+	for (i=0; i<len_b; i++) {
+		vmon_monitor_outb(data[i]);
+	}
+
+	vmon_monitor_flush();
+
+	vmon_monitor_unlock_impl(&glbl_mon.lock);
 }
 
 void vmon_monitor_run() {

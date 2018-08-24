@@ -12,6 +12,13 @@ extern "C" {
 
 typedef int32_t (*vmon_data_f)(void *, uint8_t *, uint32_t);
 
+typedef enum {
+	FIXEDLEN_2,
+	FIXEDLEN_4,
+	FIXEDLEN_8,
+	FIXEDLEN_16
+} vmon_fixedlen_e;
+
 typedef struct vmon_closure_s {
 	vmon_data_f			f;
 	void				*ud;
@@ -38,6 +45,25 @@ void vmon_vprintf(const char *fmt, va_list ap);
 
 void vmon_monitor_endtest(
 		int32_t				status);
+
+/**
+ * Locks access to the monitor. Must be done before beginning a variable-length message
+ */
+void vmon_monitor_lock(void);
+
+/**
+ * Unlocks access to the monitor.
+ */
+void vmon_monitor_unlock(void);
+
+/**
+ * Sends a fixed-length message.
+ * This function locks and unlocks on its own.
+ */
+void vmon_monitor_fixedlen_msg(
+		uint8_t				ep,
+		vmon_fixedlen_e		len,
+		uint8_t				*data);
 
 /**
  * vmon_monitor_run()

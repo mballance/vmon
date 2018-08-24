@@ -31,6 +31,8 @@ package vmon_client_pkg;
 			output int				ret);
 	endclass
 
+	`include "vmon_databuf.svh"
+	`include "vmon_client_ep_if.svh"
 	`include "vmon_client_ep0_if.svh"
 
 	// Global maps between native and SV handles
@@ -42,6 +44,7 @@ package vmon_client_pkg;
 		static vmon_client_ep0_if	m_ep0_client_if[chandle];
 		static vmon_h2m_if			m_h2m_if[chandle];
 		static vmon_m2h_if			m_m2h_if[chandle];
+		vmon_client_ep_if			m_client_ep_if[$];
 		semaphore					m_m2h_write_sem = new(0);
 		
 		vmon_client_ep0_if			m_ep0_listeners[$];
@@ -53,6 +56,15 @@ package vmon_client_pkg;
 		
 		function void add_ep0_listener(vmon_client_ep0_if l);
 			m_ep0_listeners.push_back(l);
+		endfunction
+		
+		function void set_ep_listener(int unsigned ep, vmon_client_ep_if l);
+			while (ep <= m_client_ep_if.size()) begin
+				m_client_ep_if.push_back(null);
+			end
+			// Enable messages for this endpoint
+			_vmon_client_set_ep_listener(m_client, ep);
+			m_client_ep_if[ep] = l;
 		endfunction
 		
 		function void add_m2h_if(vmon_m2h_if ifc);
@@ -123,6 +135,18 @@ package vmon_client_pkg;
 			m_m2h_write_sem.put(1);
 		endtask
 		
+		function void process_msg(byte unsigned ep, chandle data_h);
+			
+			if (m_client_ep_if.size() < ep && 
+					m_client_ep_if[ep] != null) begin
+					vmon_databuf data = new(data_h);
+					m_client_ep_if[ep].process_msg(ep, data);
+			end else begin
+				$display("Error: no listener registered for EP %0d", ep);
+			end
+				
+		endfunction
+		
 		function void ep0_msg(string m);
 			foreach (m_ep0_listeners[i]) begin
 				m_ep0_listeners[i].msg(m);
@@ -145,6 +169,12 @@ package vmon_client_pkg;
 	
 
 	import "DPI-C" context function chandle _vmon_client_new();
+	
+	import "DPI-C" context function void _vmon_client_set_ep_listener(chandle client, int unsigned ep);
+	
+	import "DPI-C" context function int unsigned _vmon_databuf_sz(chandle databuf);
+	
+	import "DPI-C" context function byte unsigned _vmon_databuf_at(chandle databuf, int unsigned idx);
 
 	import "DPI-C" context function chandle _vmon_client_add_m2h_if(chandle client);
 
@@ -212,6 +242,14 @@ package vmon_client_pkg;
 		vmon_client::m_client_map[if_h].poll(mask, timeout, ret);
 	endtask
 	export "DPI-C" task _vmon_client_poll;
+	
+	function automatic void _vmon_client_ep_process_msg(
+		input chandle			client_h,
+		input byte unsigned		ep,
+		input chandle			data_h);
+		vmon_client::m_client_map[client_h].process_msg(ep, data_h);
+	endfunction
+	export "DPI-C" function _vmon_client_ep_process_msg;
 	
 	function automatic void _vmon_client_ep0_msg(
 		input chandle			client_h,

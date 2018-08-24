@@ -19,6 +19,14 @@ void svSetScope(void *s);
 
 void *_vmon_client_new(void);
 
+void _vmon_client_set_ep_listener(void *, uint32_t);
+
+void _vmon_client_ep_process_msg(void *, uint8_t, void *);
+
+uint32_t _vmon_databuf_sz(void *);
+
+uint8_t _vmon_databuf_at(void *, uint32_t);
+
 int _vmon_m2h_if_recv(
 		void			*if_h,
 		uint8_t			*data,

@@ -6,10 +6,11 @@
 #include "vmon_h2m_if.h"
 #include "vmon_m2h_if.h"
 #include "vmon_client_ep0_if.h"
+#include "vmon_client_ep_if.h"
 #include "vmon_m2h_poll_if.h"
 
 class vmon_m2h_client_ep;
-class vmon_client {
+class vmon_client : public virtual vmon_client_ep_if {
 public:
 	friend class vmon_m2h_client_ep;
 
@@ -29,6 +30,8 @@ public:
 	bool ping();
 
 	void add_ep0_listener(vmon_client_ep0_if *ep0_if);
+
+	void set_ep_listener(uint32_t id, vmon_client_ep_if *ep_if);
 
 	/**
 	 * Loads an ELF file
@@ -59,6 +62,11 @@ public:
 
 	bool process_data(uint8_t *data, uint16_t len);
 
+	/**
+	 * Processor for EP0 messages
+	 */
+	void process_msg(uint8_t 	ep, const vmon_databuf	&data);
+
 private:
 
 	void process_msg(
@@ -67,11 +75,6 @@ private:
 			uint8_t		*data,
 			uint32_t	sz);
 
-	void process_ep0_msg(
-			uint8_t 	cmd,
-			uint8_t 	ep,
-			uint8_t		*data,
-			uint32_t	sz);
 
 protected:
 
@@ -149,6 +152,7 @@ private:
 	uint8_t								*m_varlen;
 
 	std::vector<vmon_client_ep0_if *>	m_ep0_listeners;
+	std::vector<vmon_client_ep_if *>	m_ep_listeners;
 
 };
 

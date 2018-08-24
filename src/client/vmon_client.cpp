@@ -21,7 +21,8 @@ vmon_client::vmon_client() {
 	m_varlen = 0;
 	m_debug = false;
 
-//	add_ep0_listener(this);
+	// Register ourselves as the EP0 listener
+	m_ep_listeners.push_back(this);
 }
 
 vmon_client::~vmon_client() {
@@ -73,6 +74,15 @@ bool vmon_client::ping() {
 
 void vmon_client::add_ep0_listener(vmon_client_ep0_if *ep0_if) {
 	m_ep0_listeners.push_back(ep0_if);
+}
+
+void vmon_client::set_ep_listener(uint32_t id, vmon_client_ep_if *ep_if) {
+	while (id >= m_ep0_listeners.size()) {
+		m_ep_listeners.push_back(0);
+	}
+	std::vector<vmon_client_ep_if *>::iterator it = m_ep_listeners.begin();
+	it += id;
+	(*it) = ep_if;
 }
 
 uint64_t vmon_client::load(const std::string &path) {
@@ -252,19 +262,24 @@ void vmon_client::process_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32_t s
 
 		case VMON_MSG_FIXLEN_REQ:
 		case VMON_MSG_VARLEN_REQ:
-			if (ep == 0) {
-				process_ep0_msg(cmd, ep, data, sz);
+			if (ep < m_ep_listeners.size() &&
+					m_ep_listeners.at(ep)) {
+				vmon_databuf buf(data, sz);
+				m_ep_listeners.at(ep)->process_msg(ep, buf);
 			} else {
-				fprintf(stdout, "Note: ep=%d\n", ep);
+				fprintf(stdout, "Error: no handler for endpoint %d\n", ep);
 			}
+//			if (ep == 0) {
+//				process_ep0_msg(cmd, ep, data, sz);
+//			} else {
+//				fprintf(stdout, "Note: ep=%d\n", ep);
+//			}
 			break;
 
 	}
-
-
 }
 
-void vmon_client::process_ep0_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32_t sz) {
+void vmon_client::process_msg(uint8_t ep, const vmon_databuf &data) {
 	uint8_t msg_cmd = data[0];
 
 	switch (msg_cmd) {
@@ -272,10 +287,10 @@ void vmon_client::process_ep0_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32
 		if (m_ep0_listeners.size() > 0) {
 			for (std::vector<vmon_client_ep0_if *>::const_iterator it=m_ep0_listeners.begin();
 					it!=m_ep0_listeners.end(); it++) {
-				(*it)->msg((const char *)&data[1]);
+				(*it)->msg((const char *)&data.data()[1]);
 			}
 		} else {
-			fprintf(stdout, "Note: %s\n", (const char *)&data[1]);
+			fprintf(stdout, "Note: %s\n", (const char *)&data.data()[1]);
 		}
 		break;
 

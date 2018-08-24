@@ -61,8 +61,37 @@ public:
 	}
 };
 
+class vmon_client_dpi_ep_listener : public virtual vmon_client_ep_if {
+public:
+	vmon_client_dpi_ep_listener(vmon_client *client) {
+		m_client = client;
+	}
+
+	virtual void process_msg(uint8_t ep, const vmon_databuf &data) {
+		_vmon_client_ep_process_msg(m_client, ep, (void *)&data);
+	}
+
+private:
+	vmon_client				*m_client;
+
+};
+
 void *_vmon_client_new() {
 	return new vmon_dpi_client();
+}
+
+void _vmon_client_set_ep_listener(void *client_h, uint32_t ep) {
+	vmon_client *client = static_cast<vmon_client *>(client_h);
+	vmon_client_dpi_ep_listener *l = new vmon_client_dpi_ep_listener(client);
+	client->set_ep_listener(ep, l);
+}
+
+uint32_t _vmon_databuf_sz(void *databuf_h) {
+	return static_cast<const vmon_databuf *>(databuf_h)->sz();
+}
+
+uint8_t _vmon_databuf_at(void *databuf_h, uint32_t idx) {
+	return static_cast<const vmon_databuf *>(databuf_h)->at(idx);
 }
 
 void *_vmon_client_add_m2h_if(void *client_p) {

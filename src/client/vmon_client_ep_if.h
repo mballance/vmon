@@ -8,20 +8,16 @@
  *      Author: ballance
  */
 
-#ifndef SRC_CLIENT_VMON_CLIENT_EP_IF_H_
-#define SRC_CLIENT_VMON_CLIENT_EP_IF_H_
+#ifndef INCLUDED_VMON_CLIENT_EP_IF_H_
+#define INCLUDED_VMON_CLIENT_EP_IF_H_
+#include "vmon_databuf.h"
 
 class vmon_client_ep_if {
 public:
 
 	virtual ~vmon_client_ep_if() { }
 
-	/*
-	 * ep_data()
-	 *
-	 * Called by an endpoint to submit received data to the client
-	 */
-	virtual void ep_data(uint32_t ep, void *data, uint32_t sz) = 0;
+	virtual void process_msg(uint8_t ep, const vmon_databuf &data);
 
 };
 
@@ -29,4 +25,4 @@ public:
 
 
 
-#endif /* SRC_CLIENT_VMON_CLIENT_EP_IF_H_ */
+#endif /* INCLUDED_VMON_CLIENT_EP_IF_H_ */
