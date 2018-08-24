@@ -58,8 +58,18 @@ interface wb_vmon_monitor_if #(
 	wire								ACK;
 	wire								WE;
 	
+`ifdef HAVE_HDL_VIRTUAL_INTERFACE
 	vmon_m2h_api					api;
-	byte unsigned					data[64];
+`else
+	int unsigned					m_id;
+	
+	import "DPI-C" context function int unsigned wb_vmon_monitor_register(string path);
+	
+	initial begin
+		m_id = wb_vmon_monitor_register($sformatf("%m"));
+	end
+`endif /* HAVE_HDL_VIRTUAL_INTERFACE */
+	longint unsigned				data;
 	int unsigned					size;
 	
 	wire[WB_ADDR_WIDTH-1:0]         ADDRESS;
@@ -67,53 +77,63 @@ interface wb_vmon_monitor_if #(
 	wire addr_eq = (ADR[WB_ADDR_WIDTH-1:$clog2(WB_DATA_WIDTH)-1] == 
 			ADDRESS[WB_ADDR_WIDTH-1:$clog2(WB_DATA_WIDTH)-1]);
 	
+`ifndef HAVE_HDL_VIRTUAL_INTERFACE
+	import "DPI-C" task wb_vmon_monitor_write(
+			int unsigned id,
+			longint unsigned data,
+			int unsigned sz);
+`endif
 	always @(posedge clk_i) begin
 		if (rst_i == 0) begin
 			// We've got a write
 			if (CYC && STB && ACK && WE && addr_eq) begin
+`ifdef HAVE_HDL_VIRTUAL_INTERFACE
+				if (api == null) begin
+					$display("ERROR: api for %m is null");
+				end
+`endif /* HAVE_HDL_VIRTUAL_INTERFACE */
 				
 				case (SEL)
 					'b0001: begin
-						data[0] = DAT_W[7:0];
+						data = DAT_W[7:0];
 						size = 1;
 					end
 					'b0010: begin
-						data[0] = DAT_W[15:8];
+						data = DAT_W[15:8];
 						size = 1;
 					end 
 					'b0100: begin
-						data[0] = DAT_W[23:16];
+						data = DAT_W[23:16];
 						size = 1;
 					end
 					'b1000: begin
-						data[0] = DAT_W[31:24];
+						data = DAT_W[31:24];
 						size = 1;
 					end
 					'b0011: begin
-						data[0] = DAT_W[7:0];
-						data[1] = DAT_W[15:8];
+						data = {DAT_W[15:0], DAT_W[7:0]};
 						size = 2;
 					end
 					'b1100: begin
-						data[0] = DAT_W[23:16];
-						data[1] = DAT_W[31:24];
+						data = {DAT_W[31:24], DAT_W[23:16]};
 						size = 2;
 					end
 					'b1111: begin
-						data[0] = DAT_W[7:0];
-						data[1] = DAT_W[15:8];
-						data[2] = DAT_W[23:16];
-						data[3] = DAT_W[31:24];
+						data = {DAT_W[31:24], DAT_W[23:16], DAT_W[15:8], DAT_W[7:0]};
 						size = 4;
 					end 
 					default: $display("Unrecognized SEL 'b%04b", SEL);
 				endcase
-				
+`ifdef HAVE_HDL_VIRTUAL_INTERFACE
 				if (api != null) begin
 					api.write(data, size);
 				end else begin
 					$display("ERROR: api for %m is null");
 				end
+`else
+				wb_vmon_monitor_write(m_id, data, size);
+				$display("VMON: write sz=%0d", size);
+`endif /* HAVE_HDL_VIRTUAL_INTERFACE */
 			end
 		end 
 	end
