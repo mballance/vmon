@@ -17,7 +17,7 @@ package vmon_client_pkg;
 		vmon_client					m_client;
 
 		task write(
-			input byte unsigned		data[64],
+			longint unsigned		data,
 			input int unsigned		size);
 			m_client.notify_m2h_write();
 			_vmon_m2h_client_ep_write(m_client_ep, data, size);
@@ -59,12 +59,13 @@ package vmon_client_pkg;
 		endfunction
 		
 		function void set_ep_listener(int unsigned ep, vmon_client_ep_if l);
-			while (ep <= m_client_ep_if.size()) begin
+			while (ep >= m_client_ep_if.size()) begin
 				m_client_ep_if.push_back(null);
 			end
 			// Enable messages for this endpoint
 			_vmon_client_set_ep_listener(m_client, ep);
 			m_client_ep_if[ep] = l;
+//			$display("set_ep_listener l=%p m_client_ep_if[%0d]=%p", l, ep, m_client_ep_if[ep]);
 		endfunction
 		
 		function void add_m2h_if(vmon_m2h_if ifc);
@@ -136,8 +137,10 @@ package vmon_client_pkg;
 		endtask
 		
 		function void process_msg(byte unsigned ep, chandle data_h);
-			
-			if (m_client_ep_if.size() < ep && 
+		
+//			$display("process_msg: m_client_ep_if.size=%0d", m_client_ep_if.size());
+//			$display("process_msg: l=%p", m_client_ep_if[ep]);
+			if (ep < m_client_ep_if.size() && 
 					m_client_ep_if[ep] != null) begin
 					vmon_databuf data = new(data_h);
 					m_client_ep_if[ep].process_msg(ep, data);
@@ -172,15 +175,12 @@ package vmon_client_pkg;
 	
 	import "DPI-C" context function void _vmon_client_set_ep_listener(chandle client, int unsigned ep);
 	
-	import "DPI-C" context function int unsigned _vmon_databuf_sz(chandle databuf);
-	
-	import "DPI-C" context function byte unsigned _vmon_databuf_at(chandle databuf, int unsigned idx);
 
 	import "DPI-C" context function chandle _vmon_client_add_m2h_if(chandle client);
 
 	import "DPI-C" context task _vmon_m2h_client_ep_write(
 			chandle					m2h_h,
-			input byte unsigned		data[64],
+			input longint unsigned	data,
 			input int unsigned		sz);
 
 	import "DPI-C" context function chandle _vmon_client_add_h2m_if(chandle client);

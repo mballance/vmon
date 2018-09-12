@@ -19,7 +19,7 @@ vmon_client::vmon_client() {
 
 	m_varlenmax = 0;
 	m_varlen = 0;
-	m_debug = false;
+	m_debug = true;
 
 	// Register ourselves as the EP0 listener
 	m_ep_listeners.push_back(this);
@@ -77,12 +77,14 @@ void vmon_client::add_ep0_listener(vmon_client_ep0_if *ep0_if) {
 }
 
 void vmon_client::set_ep_listener(uint32_t id, vmon_client_ep_if *ep_if) {
-	while (id >= m_ep0_listeners.size()) {
+	while (id >= m_ep_listeners.size()) {
 		m_ep_listeners.push_back(0);
 	}
 	std::vector<vmon_client_ep_if *>::iterator it = m_ep_listeners.begin();
 	it += id;
 	(*it) = ep_if;
+
+	fprintf(stdout, "set_ep_listener: ep[%d] = %p\n", id, (*it));
 }
 
 uint64_t vmon_client::load(const std::string &path) {
@@ -250,7 +252,7 @@ bool vmon_client::set_h2m_path(uint8_t p) {
 
 void vmon_client::process_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32_t sz) {
 	if (m_debug) {
-		fprintf(stdout, "process_msg: cmd=%d ep=%d sz=%d\n", cmd, ep, sz);
+		fprintf(stdout, "process_msg: cmd=0x%02x ep=%d sz=%d\n", cmd, ep, sz);
 	}
 	switch (cmd) {
 		case VMON_MSG_PING_REQ:
@@ -269,17 +271,12 @@ void vmon_client::process_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32_t s
 			} else {
 				fprintf(stdout, "Error: no handler for endpoint %d\n", ep);
 			}
-//			if (ep == 0) {
-//				process_ep0_msg(cmd, ep, data, sz);
-//			} else {
-//				fprintf(stdout, "Note: ep=%d\n", ep);
-//			}
 			break;
 
 	}
 }
 
-void vmon_client::process_msg(uint8_t ep, const vmon_databuf &data) {
+void vmon_client::process_msg(uint8_t ep, vmon_databuf &data) {
 	uint8_t msg_cmd = data[0];
 
 	switch (msg_cmd) {

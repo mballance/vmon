@@ -17,7 +17,7 @@ public:
 
 	virtual ~vmon_client_ep_if() { }
 
-	virtual void process_msg(uint8_t ep, const vmon_databuf &data);
+	virtual void process_msg(uint8_t ep, vmon_databuf &data);
 
 };
 

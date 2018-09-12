@@ -99,9 +99,6 @@ void vmon_m2h_client_ep::process() {
 				m_msg_len = 2 << ((b >> 1) & 0x3);
 				m_msg_fixed = true;
 				m_msg_state = MsgState_Data;
-
-				fprintf(stdout, "FIXED: ep=%d\n", m_msg_ep);
-				fprintf(stdout, "FIXED: len=%d\n", m_msg_len);
 			} else {
 				fprintf(stdout, "fixed-length parity error\n");
 			}

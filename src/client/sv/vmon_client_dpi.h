@@ -27,6 +27,12 @@ uint32_t _vmon_databuf_sz(void *);
 
 uint8_t _vmon_databuf_at(void *, uint32_t);
 
+uint8_t _vmon_databuf_get8(void *);
+
+uint16_t _vmon_databuf_get16(void *);
+
+uint32_t _vmon_databuf_get32(void *);
+
 int _vmon_m2h_if_recv(
 		void			*if_h,
 		uint8_t			*data,
@@ -58,7 +64,7 @@ int _vmon_client_wait_endtest(void *client_p, int *status);
 
 int _vmon_m2h_client_ep_write(
 		void			*m2h_h,
-		uint8_t			*data,
+		uint64_t		data,
 		uint32_t		sz);
 
 void _vmon_client_ep0_msg(

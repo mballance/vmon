@@ -67,7 +67,7 @@ public:
 		m_client = client;
 	}
 
-	virtual void process_msg(uint8_t ep, const vmon_databuf &data) {
+	virtual void process_msg(uint8_t ep, vmon_databuf &data) {
 		_vmon_client_ep_process_msg(m_client, ep, (void *)&data);
 	}
 
@@ -94,6 +94,18 @@ uint8_t _vmon_databuf_at(void *databuf_h, uint32_t idx) {
 	return static_cast<const vmon_databuf *>(databuf_h)->at(idx);
 }
 
+uint8_t _vmon_databuf_get8(void *databuf_h) {
+	return static_cast<vmon_databuf *>(databuf_h)->get8();
+}
+
+uint16_t _vmon_databuf_get16(void *databuf_h) {
+	return static_cast<vmon_databuf *>(databuf_h)->get16();
+}
+
+uint32_t _vmon_databuf_get32(void *databuf_h) {
+	return static_cast<vmon_databuf *>(databuf_h)->get32();
+}
+
 void *_vmon_client_add_m2h_if(void *client_p) {
 	vmon_client_dpi_m2h *ret = new vmon_client_dpi_m2h();
 	static_cast<vmon_client *>(client_p)->add_m2h_if(ret);
@@ -102,10 +114,16 @@ void *_vmon_client_add_m2h_if(void *client_p) {
 
 int _vmon_m2h_client_ep_write(
 		void			*m2h_h,
-		uint8_t			*data,
+		uint64_t		data,
 		uint32_t		sz) {
+	uint8_t buf[8];
+
+	for (int i=0; i<8; i++) {
+		buf[i] = (data >> 8*i);
+	}
+
 	try {
-		static_cast<vmon_client_dpi_m2h *>(m2h_h)->write(data, sz);
+		static_cast<vmon_client_dpi_m2h *>(m2h_h)->write(buf, sz);
 	} catch (std::runtime_error &e) {
 		return 1;
 	}

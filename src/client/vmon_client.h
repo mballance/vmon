@@ -65,7 +65,7 @@ public:
 	/**
 	 * Processor for EP0 messages
 	 */
-	void process_msg(uint8_t 	ep, const vmon_databuf	&data);
+	void process_msg(uint8_t 	ep, vmon_databuf &data);
 
 private:
 

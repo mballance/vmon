@@ -25,6 +25,12 @@ public:
 		}
 	}
 
+	uint8_t get8();
+
+	uint16_t get16();
+
+	uint32_t get32();
+
 	uint8_t operator [] (uint32_t i) const {
 		return at(i);
 	}
@@ -36,6 +42,7 @@ public:
 private:
 	uint8_t				*m_data;
 	uint32_t			m_sz;
+	uint32_t			m_idx;
 
 };
 
