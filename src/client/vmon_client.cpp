@@ -19,7 +19,7 @@ vmon_client::vmon_client() {
 
 	m_varlenmax = 0;
 	m_varlen = 0;
-	m_debug = true;
+	m_debug = false;
 
 	// Register ourselves as the EP0 listener
 	m_ep_listeners.push_back(this);

@@ -128,9 +128,12 @@ void vmon_monitor_msg(const char *msg) {
 		t++;
 	}
 
+//	vmon_monitor_tracepoint(len);
+
 	// strlen+cmd+null+checksum
 	len_t = len + 1 + 1 + 1;
 
+	vmon_monitor_lock();
 
 	// Send an EP0 MSG message
 	vmon_monitor_outb(VMON_MSG_VARLEN_REQ);
@@ -149,6 +152,8 @@ void vmon_monitor_msg(const char *msg) {
 	}
 	vmon_monitor_outb(cs);
 	vmon_monitor_flush(); // ensure the entire message is sent
+
+	vmon_monitor_unlock();
 }
 
 void vmon_monitor_tracepoint(uint32_t tp) {

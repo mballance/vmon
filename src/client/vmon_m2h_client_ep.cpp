@@ -33,6 +33,12 @@ vmon_m2h_client_ep::~vmon_m2h_client_ep() {
 int32_t vmon_m2h_client_ep::write(void *data, uint32_t sz) {
 	// Append the data to the buffer
 
+//	for (uint32_t i=0; i<sz; i++) {
+//		fprintf(stdout, "[VMON] write 0x%02x (%c)\n",
+//				((uint8_t *)data)[i],
+//				((uint8_t *)data)[i]);
+//	}
+
 	if ((m_data_write_idx-m_data_read_idx+sz) > m_data_max) {
 		// realloc
 		uint32_t new_sz = m_data_max + (((sz-1)/1024)+1)*1024;
@@ -129,7 +135,8 @@ void vmon_m2h_client_ep::process() {
 
 		// Wait until we have a complete message
 		case MsgState_Data: {
-			uint32_t len = (m_msg_fixed)?m_msg_len:(m_msg_len+1);
+//			uint32_t len = (m_msg_fixed)?m_msg_len:(m_msg_len+1);
+			uint32_t len = m_msg_len;
 			if (avail() >= len) {
 				// Message starts at m_data_read_idx;
 				m_client->process_msg(
@@ -173,7 +180,9 @@ void vmon_m2h_client_ep::skip(uint32_t amt) {
 		m_data_write_idx = 0;
 	} else {
 		// Update the buffer the hard way
-		m_data_read_idx += amt;
-		::memmove(m_data, &m_data[m_data_read_idx], avail());
+		::memmove(m_data, &m_data[m_data_read_idx+amt],
+				(m_data_write_idx-m_data_read_idx-amt));
+		m_data_write_idx = (m_data_write_idx-m_data_read_idx-amt);
+		m_data_read_idx = 0;
 	}
 }

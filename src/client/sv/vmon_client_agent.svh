@@ -48,12 +48,12 @@ class vmon_client_agent
 	endtask
 
 	virtual function void msg(string m);
-		$display("NOTE: msg %0s", m);
+//		$display("NOTE: msg %0s", m);
 		`uvm_info(get_name(), m, UVM_LOW);
 	endfunction
 	
 	virtual function void tracepoint(int unsigned tp);
-		$display("NOTE: tracepoint %0d", tp);
+//		$display("NOTE: tracepoint %0d", tp);
 		`uvm_info(get_name(), $sformatf("Tracepoint: %0d", tp), UVM_LOW);
 	endfunction
 	
