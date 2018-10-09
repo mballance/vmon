@@ -49,7 +49,7 @@ class vmon_client_agent
 
 	virtual function void msg(string m);
 //		$display("NOTE: msg %0s", m);
-		`uvm_info(get_name(), m, UVM_LOW);
+		`uvm_info(get_name(), $sformatf("\033[31;1;4m%0s\033[0m", m), UVM_LOW);
 	endfunction
 	
 	virtual function void tracepoint(int unsigned tp);

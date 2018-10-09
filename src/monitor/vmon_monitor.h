@@ -5,6 +5,7 @@
 #define INCLUDED_VMON_MONITOR_H
 #include <stdint.h>
 #include <stdarg.h>
+#include "vmon_databuf.h"
 
 #ifdef __cplusplus
 extern "C" {
