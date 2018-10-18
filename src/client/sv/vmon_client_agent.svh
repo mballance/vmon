@@ -58,6 +58,8 @@ class vmon_client_agent
 	virtual function void endtest(int status);
 		$display("NOTE (UVM): endtest %0d", status);
 		if (m_run_phase != null) begin
+			`uvm_info(get_name(), $sformatf("Dropping objection objection=%p", 
+					m_run_phase.get_objection()), UVM_LOW);
 			m_run_phase.drop_objection(this, "Software Test");
 		end else begin
 			`uvm_fatal(get_name(), "m_run_phase is null");
