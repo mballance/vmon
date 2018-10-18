@@ -48,19 +48,19 @@ class vmon_client_agent
 	endtask
 
 	virtual function void msg(string m);
-//		$display("NOTE: msg %0s", m);
 		`uvm_info(get_name(), $sformatf("\033[31;1;4m%0s\033[0m", m), UVM_LOW);
 	endfunction
 	
 	virtual function void tracepoint(int unsigned tp);
-//		$display("NOTE: tracepoint %0d", tp);
 		`uvm_info(get_name(), $sformatf("Tracepoint: %0d", tp), UVM_LOW);
 	endfunction
 	
 	virtual function void endtest(int status);
-		$display("NOTE: endtest %0d", status);
+		$display("NOTE (UVM): endtest %0d", status);
 		if (m_run_phase != null) begin
 			m_run_phase.drop_objection(this, "Software Test");
+		end else begin
+			`uvm_fatal(get_name(), "m_run_phase is null");
 		end
 	endfunction
 	
