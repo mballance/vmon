@@ -67,6 +67,17 @@ void vmon_monitor_fixedlen_msg(
 		uint8_t				*data);
 
 /**
+ * Sends a variable-length message that
+ * is partitioned between a variable-length header block
+ * and variable-length data block.
+ */
+void vmon_monitor_varlen_hdr_msg(
+		uint8_t					ep,
+		const vmon_databuf_t	*hdr,
+		const uint8_t			*data,
+		uint32_t				data_len);
+
+/**
  * vmon_monitor_run()
  *
  * Runs the main loop of the vmon_monitor

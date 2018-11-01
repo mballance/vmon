@@ -33,6 +33,10 @@ class vmon_databuf;
 	function int unsigned get32();
 		return _vmon_databuf_get32(m_hndl);
 	endfunction
+	
+	function string gets();
+		return _vmon_databuf_gets(m_hndl);
+	endfunction
 
 endclass
 
@@ -45,5 +49,7 @@ import "DPI-C" context function byte unsigned _vmon_databuf_get8(chandle databuf
 import "DPI-C" context function shortint unsigned _vmon_databuf_get16(chandle databuf);
 
 import "DPI-C" context function int unsigned _vmon_databuf_get32(chandle databuf);
+
+import "DPI-C" context function string _vmon_databuf_gets(chandle databuf);
 
 

@@ -9,6 +9,7 @@
 #define INCLUDED_VMON_DATABUF_H
 #include <stdint.h>
 
+
 typedef struct vmon_databuf_s {
 	uint32_t		idx;
 	uint8_t			data[1];
@@ -39,5 +40,9 @@ static inline void vmon_databuf_put8(vmon_databuf_t *buf, uint8_t data) {
 	buf->data[buf->idx++] = data;
 }
 
+// extern void *alloca(size_t sz);
+
+#define vmon_databuf_alloc(sz) \
+	(vmon_databuf_t *)alloca(sizeof(vmon_databuf_t)+(sz))
 
 #endif /* INCLUDED_VMON_DATABUF_H */

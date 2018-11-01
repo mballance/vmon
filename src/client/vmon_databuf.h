@@ -31,6 +31,8 @@ public:
 
 	uint32_t get32();
 
+	const char *gets();
+
 	uint8_t operator [] (uint32_t i) const {
 		return at(i);
 	}

@@ -349,6 +349,42 @@ void vmon_monitor_fixedlen_msg(
 	vmon_monitor_unlock_impl(&glbl_mon.lock);
 }
 
+void vmon_monitor_varlen_hdr_msg(
+		uint8_t						ep,
+		const vmon_databuf_t		*hdr,
+		const uint8_t				*data,
+		uint32_t					data_len) {
+	// Header+data+checksum
+	uint32_t i, len_t = hdr->idx + data_len + 1;
+	uint8_t cs = 0;
+	vmon_monitor_lock_impl(&glbl_mon.lock);
+
+	vmon_monitor_outb(VMON_MSG_VARLEN_REQ);
+	vmon_monitor_outb(ep << 3); // EP always occupies the same space
+
+	// Total length of data
+	vmon_monitor_outb(len_t);
+	vmon_monitor_outb(len_t>>8);
+
+	// First, send header data
+	for (i=0; i<hdr->idx; i++) {
+		vmon_monitor_outb(hdr->data[i]);
+		cs += hdr->data[i];
+	}
+
+	// Finally, send payload data
+	for (i=0; i<data_len; i++) {
+		vmon_monitor_outb(data[i]);
+		cs += data[i];
+	}
+
+	// Send the checksum
+	vmon_monitor_outb(cs);
+
+	vmon_monitor_flush();
+	vmon_monitor_unlock_impl(&glbl_mon.lock);
+}
+
 void vmon_monitor_run() {
 	uint8_t b, p;
 	uint32_t i;

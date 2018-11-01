@@ -106,6 +106,10 @@ uint32_t _vmon_databuf_get32(void *databuf_h) {
 	return static_cast<vmon_databuf *>(databuf_h)->get32();
 }
 
+const char *_vmon_databuf_gets(void *databuf_h) {
+	return static_cast<vmon_databuf *>(databuf_h)->gets();
+}
+
 void *_vmon_client_add_m2h_if(void *client_p) {
 	vmon_client_dpi_m2h *ret = new vmon_client_dpi_m2h();
 	static_cast<vmon_client *>(client_p)->add_m2h_if(ret);

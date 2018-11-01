@@ -48,3 +48,19 @@ uint32_t vmon_databuf::get32() {
 	}
 }
 
+const char *vmon_databuf::gets() {
+	const char *ret = (const char *)&m_data[m_idx];
+
+	// Find the null terminator
+	while (m_idx < m_sz && m_data[m_idx]) {
+		m_idx++;
+	}
+
+	// Advance past it
+	if (m_idx < m_sz) {
+		m_idx++;
+	}
+
+	return ret;
+}
+

@@ -267,6 +267,7 @@ void vmon_client::process_msg(uint8_t cmd, uint8_t ep, uint8_t *data, uint32_t s
 			if (ep < m_ep_listeners.size() &&
 					m_ep_listeners.at(ep)) {
 				vmon_databuf buf(data, sz);
+				fprintf(stdout, "cmd=0x%02x ep=%d\n", cmd, ep);
 				m_ep_listeners.at(ep)->process_msg(ep, buf);
 			} else {
 				fprintf(stdout, "Error: no handler for endpoint %d\n", ep);
@@ -316,7 +317,7 @@ void vmon_client::process_msg(uint8_t ep, vmon_databuf &data) {
 				(*it)->endtest(status);
 			}
 		} else {
-			fprintf(stdout, "Note: endtest %d\n", status);
+			fprintf(stdout, "Note (C++): endtest %d\n", status);
 		}
 	} break;
 

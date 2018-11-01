@@ -33,6 +33,8 @@ uint16_t _vmon_databuf_get16(void *);
 
 uint32_t _vmon_databuf_get32(void *);
 
+const char *_vmon_databuf_gets(void *);
+
 int _vmon_m2h_if_recv(
 		void			*if_h,
 		uint8_t			*data,
